@@ -18,7 +18,6 @@ def plot(X, y, colors, s, G):
 
 
 def convert_graph_to_image(G, p, s):
-    print("drawing initial grid...")
     X = []
     y = []
     colors = []
@@ -35,7 +34,6 @@ def convert_graph_to_image(G, p, s):
 
 
 def optimized_convert_graph_to_image_2(G, areas, p, s):
-    print("drawing initial grid...")
     X = []
     y = []
     colors = []

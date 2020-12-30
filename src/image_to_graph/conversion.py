@@ -53,10 +53,8 @@ def convert_image_to_graph(path):
             G.add_node(node_num, data={"type": pixel_type, "x": x, "y": y, "num": node_num, "lvl": 0})
             if x > 0:
                 G.add_edge(y * image.shape[1] + x - 1, node_num, w=1)
-                G.add_edge(node_num, y * image.shape[1] + x - 1, w=1)
             if y > 0:
                 G.add_edge((y - 1) * image.shape[1] + x, node_num, w=1)
-                G.add_edge(node_num, (y - 1) * image.shape[1] + x, w=1)
             if pixel_type != NORMAL_AREA:
                 initial_area_number = handle_area(x, y, image, pixel_type, areas_map, areas, node_num, G,
                                                   initial_area_number)

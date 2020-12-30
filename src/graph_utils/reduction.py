@@ -44,10 +44,6 @@ def add_edges(G, vertex, vertices):
         G.add_edge(v_num, vertex, w=edge_weight)
 
 
-def get_paths_weights():
-    pass
-
-
 def reduce_vertices(G, vertices_to_reduce, new_node_type):
     new_node_data = {}
     new_node_name = next(iter(vertices_to_reduce))
@@ -59,10 +55,6 @@ def reduce_vertices(G, vertices_to_reduce, new_node_type):
     G.add_node(new_node_name, data=new_node_data)
     add_edges(G, new_node_name, adj_with_edges_weights)
     return new_node_name
-
-
-def reduce_vertices_2(G, vertices_to_reduce, new_node_type):
-    pass
 
 
 def reduce_areas(G, areas):
