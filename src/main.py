@@ -8,8 +8,8 @@ grid = Grid('grid4.png')
 lam_algorithm(grid.G)
 
 # grid.fully_restore()
-
-grid.print_execution_times()
+#
+# grid.print_execution_times()
 
 
 
