@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from src.definitions import NORMAL_AREA
+from src.graph_utils.lam_algorithm import lam_algorithm
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
 from src.grid_to_image.draw import optimized_convert_graph_to_image_2
@@ -83,3 +84,25 @@ class Grid:
         if self.drawing_graph_time:
             print('drawing graph: ' + str(round(self.drawing_graph_time, 6)) + ' s')
         print('---------------------------------------')
+
+    def reduce_by_lam(self):
+        print('lam reduction stared (number of nodes: ' + str(self.G.number_of_nodes()) + ")...")
+        s_v_number = self.G.number_of_nodes()
+        i = 1
+        while self.G.number_of_nodes() / s_v_number > 2 / 3:
+            start = time.time()
+            lam_algorithm(self.G)
+            # for match in lam_algorithm(self.G):
+            #     self.reduce(match)
+            print(str(i) + ') reduce: (time: ' + str(round(time.time() - start, 2)) + " s, number of nodes: " + str(
+                self.G.number_of_nodes()) + ")")
+            i += 1
+        print('lam reduction finished')
+
+    def get_highest_degree(self):
+        degrees = sorted(d for n, d in self.G.degree())
+        return degrees[-1]
+
+    def get_smallest_degree(self):
+        degrees = sorted(d for n, d in self.G.degree())
+        return degrees[0]
