@@ -2,7 +2,7 @@ import random
 
 import matplotlib.pyplot as plt
 
-from src.definitions import NORMAL_AREA, INDIVISIBLE_AREA, OFF_AREA
+from src.definitions import NORMAL_AREA, INDIVISIBLE_AREA, OFF_AREA, partitions_colors
 from src.grid_to_image.helpers import get_color
 
 
@@ -51,5 +51,19 @@ def optimized_convert_graph_to_image_2(G, areas, p, s):
                 X.append(G.nodes[node]['data']['x'])
                 y.append(G.nodes[node]['data']['y'])
                 colors.append('#%02x%02x%02x' % get_color(G.nodes[node]['data']['type'])[::-1])
+
+    plot(X, y, colors, s, G)
+
+
+def convert_partitioned_graph_to_image(G, p, s):
+    X = []
+    y = []
+    colors = []
+
+    for node in G.nodes:
+        if random.uniform(0, 1) < p:
+            X.append(G.nodes[node]['data']['x'])
+            y.append(G.nodes[node]['data']['y'])
+            colors.append(partitions_colors[G.nodes[node]['data']['partition']])
 
     plot(X, y, colors, s, G)

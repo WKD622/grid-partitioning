@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from src.definitions import NORMAL_AREA
-from src.graph_utils.lam_algorithm import lam_algorithm
+from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
-from src.grid_to_image.draw import optimized_convert_graph_to_image_2
+from src.grid_to_image.draw import optimized_convert_graph_to_image_2, convert_partitioned_graph_to_image
 from src.image_to_graph.conversion import convert_image_to_graph
 from src.utils import get_project_root
 
@@ -25,6 +25,7 @@ class Grid:
         self.full_restoration_time = None
         self.areas_reduction_time = None
         self.drawing_graph_time = None
+        self.drawing_partitioned_grid_time = None
 
     def reduce(self, vertices_to_reduce):
         new_vertex_name = reduce_vertices_helper(self.G, vertices_to_reduce, NORMAL_AREA)
@@ -64,6 +65,12 @@ class Grid:
         else:
             print("You cannot draw initial graph due to reductions")
 
+    def draw_partitioned_grid(self, p, s):
+        print("drawing partitioned grid started...")
+        start = time.time()
+        convert_partitioned_graph_to_image(self.G, p, s)
+        self.drawing_partitioned_grid_time = time.time() - start
+
     def draw_graph(self):
         print("drawing graph started...")
         start = time.time()
@@ -83,21 +90,31 @@ class Grid:
             print('drawing initial grid: ' + str(round(self.drawing_initial_grid_time, 2)) + ' s')
         if self.drawing_graph_time:
             print('drawing graph: ' + str(round(self.drawing_graph_time, 6)) + ' s')
+        if self.drawing_partitioned_grid_time:
+            print('drawing partitioned grid: ' + str(round(self.drawing_partitioned_grid_time, 6)) + ' s')
         print('---------------------------------------')
 
-    def reduce_by_lam(self):
+    def reduce_by_lam(self, number_of_parts):
+        # self.draw_graph()
         print('lam reduction stared (number of nodes: ' + str(self.G.number_of_nodes()) + ")...")
-        s_v_number = self.G.number_of_nodes()
         i = 1
-        while self.G.number_of_nodes() / s_v_number > 2 / 3:
+        while self.G.number_of_nodes() > number_of_parts:
             start = time.time()
-            lam_algorithm(self.G)
-            # for match in lam_algorithm(self.G):
-            #     self.reduce(match)
+            matched = lam_algorithm(self.G, number_of_parts)
+            for match in matched:
+                self.reduce(match)
+            # print(matched)
+            # self.draw_graph()
             print(str(i) + ') reduce: (time: ' + str(round(time.time() - start, 2)) + " s, number of nodes: " + str(
                 self.G.number_of_nodes()) + ")")
             i += 1
         print('lam reduction finished')
+
+    def divide(self):
+        partition_number = 0
+        for node in self.G.nodes:
+            self.G.nodes[node]['data']['partition'] = partition_number
+            partition_number += 1
 
     def get_highest_degree(self):
         degrees = sorted(d for n, d in self.G.degree())
@@ -106,3 +123,14 @@ class Grid:
     def get_smallest_degree(self):
         degrees = sorted(d for n, d in self.G.degree())
         return degrees[0]
+
+    def get_edge_with_smallest_weight(self):
+        return sorted(self.G.edges.data('w'), key=lambda x: x[2])[0]
+
+    def get_edge_with_highest_weight(self):
+        return sorted(self.G.edges.data('w'), key=lambda x: x[2])[len(self.G.edges) - 1]
+
+    def greedy_matching(self):
+        start = time.time()
+        greedy_matching_helper(self)
+        print('greedy matching time: ' + str(round(time.time() - start, 6)) + ' s')

@@ -10,11 +10,12 @@ def is_matched(M, v):
 
 
 def get_unchecked_edges(G, U, v):
-    adj_vertices = set(G.adj[v].keys())
+    adj_vertices = set(G.adj[v])
     adj_edges = set()
     for x in adj_vertices:
+        adj_edges.add((x, v))
         adj_edges.add((v, x))
-    return U & adj_edges
+    return U.intersection(adj_edges)
 
 
 def get_adj_unchecked_vertex(G, U, v):
@@ -29,7 +30,7 @@ def there_are_unchecked_edges(G, U, v):
 
 
 def can_be_matched(G, a, b, m_c):
-    return G.degree[a] + G.degree[b] < m_c
+    return G.degree[a] + G.degree[b] <= m_c
 
 
 def match(M, a, b):
@@ -49,7 +50,7 @@ def remove_edge_from_set(S, a, b):
     if (a, b) in S:
         S.remove((a, b))
     if (b, a) in S:
-        S.remove(b, a)
+        S.remove((b, a))
 
 
 def move_edge(from_, to_, a, b):
@@ -61,15 +62,13 @@ def move_edge(from_, to_, a, b):
 
 
 def to_remove(R, C):
-    for x in C:
-        a, b = x
+    for a, b in C:
         R.add((a, b))
     C.clear()
 
 
 def remove_all_matched_edges(R, M, C, v):
-    for x in C:
-        k, l = x
+    for k, l in C:
         if (is_matched(M, k) and l == v) or (is_matched(M, l) and k == v):
             move_edge(C, R, k, l)
 
@@ -83,57 +82,25 @@ def all_adj_matched(G, M, v):
 
 def restore_all_free_edges(U, M, C, v):
     edges_to_be_moved = []
-    for x in C:
-        k, l = x
-        if (is_free(M, k) and l == v) or is_free(M, l) and k == v:
+    for k, l in C:
+        if (is_free(M, k) and l == v) or (is_free(M, l) and k == v):
             edges_to_be_moved.append((k, l))
 
-    for x in edges_to_be_moved:
-        k, l = x
+    for k, l in edges_to_be_moved:
         move_edge(C, U, k, l)
 
 
 def get_smallest_and_highest_degrees(G):
     degrees = sorted((d, n) for n, d in G.degree())
     highest_degree, _ = degrees[-1]
-    smallest_degree, _ = degrees[0]
-    return highest_degree, smallest_degree
+    smallest_degree, node_number = degrees[0]
+    return highest_degree, smallest_degree, node_number
 
 
 def remove_adj_edges(G, U, v):
     for x in get_unchecked_edges(G, U, v):
         k, l = x
         remove_edge_from_set(U, k, l)
-
-
-def try_match(G, a, b, R, U, M, m_c):
-    C_a = set()
-    C_b = set()
-    while is_free(M, a) and is_free(M, b) and (
-            there_are_unchecked_edges(G, U, a) or there_are_unchecked_edges(G, U, b)):
-        if is_free(M, a) and there_are_unchecked_edges(G, U, a):
-            c = get_adj_unchecked_vertex(G, U, a)
-            move_edge(U, C_a, a, c)
-            if get_weight(G, a, c) > get_weight(G, a, b):
-                try_match(G, a, c, R, U, M, m_c)
-        if is_free(M, b) and there_are_unchecked_edges(G, U, b):
-            d = get_adj_unchecked_vertex(G, U, b)
-            move_edge(U, C_b, b, d)
-            if get_weight(G, b, d) > get_weight(G, a, b):
-                try_match(G, b, d, R, U, M, m_c)
-
-    is_free_a = is_free(M, a)
-    is_free_b = is_free(M, b)
-    if is_matched(M, a) and is_free_b:
-        restore_all_free_edges(U, M, C_b, b)
-        if all_adj_matched(G, M, b):
-            remove_adj_edges(G, U, b)
-    elif is_matched(M, b) and is_free_a:
-        restore_all_free_edges(U, M, C_a, a)
-        if all_adj_matched(G, M, a):
-            remove_adj_edges(G, U, a)
-    elif is_free_a and is_free_b and can_be_matched(G, a, b, m_c):
-        match(M, a, b)
 
 
 def draw_an_edge(edges):
@@ -149,24 +116,59 @@ def convert_matched_for_return(M):
     return M_out
 
 
-def lam_algorithm(G):
+def print_progress(U, G):
+    if len(U) % 1000 == 0:
+        print("lam progress: " + str(round((1 - len(U) / int(G.number_of_edges())) * 100)) + "%")
+
+
+def finish(M, G, number_of_parts):
+    return (G.number_of_nodes() - len(M) / 2) == number_of_parts
+
+
+def try_match(G, a, b, U, M, m_c):
+    C_a = set()
+    C_b = set()
+    while is_free(M, a) and is_free(M, b) and (
+            there_are_unchecked_edges(G, U, a) or there_are_unchecked_edges(G, U, b)):
+        if is_free(M, a) and there_are_unchecked_edges(G, U, a):
+            c = get_adj_unchecked_vertex(G, U, a)
+            move_edge(U, C_a, a, c)
+            if get_weight(G, a, c) > get_weight(G, a, b):
+                try_match(G, a, c, U, M, m_c)
+        if is_free(M, b) and there_are_unchecked_edges(G, U, b):
+            d = get_adj_unchecked_vertex(G, U, b)
+            move_edge(U, C_b, b, d)
+            if get_weight(G, b, d) > get_weight(G, a, b):
+                try_match(G, b, d, U, M, m_c)
+    is_free_a = is_free(M, a)
+    is_free_b = is_free(M, b)
+    if is_free_a and is_free_b and can_be_matched(G, a, b, m_c):
+        match(M, a, b)
+    elif is_matched(M, a) and is_free_b:
+        restore_all_free_edges(U, M, C_b, b)
+    elif is_matched(M, b) and is_free_a:
+        restore_all_free_edges(U, M, C_a, a)
+
+
+def lam_algorithm(G, number_of_parts):
+    print("lam started...")
     M = {}
     U = set(G.edges)
-    R = set()
-    i = 10
-    h_deg, s_deg = get_smallest_and_highest_degrees(G)
+    h_deg, s_deg, _ = get_smallest_and_highest_degrees(G)
     m_c = 2 * s_deg + h_deg
 
     while len(U) != 0:
-        print(U)
-        print(convert_matched_for_return(M))
-        # prev_U = U.copy()
+        print_progress(U, G)
         a, b = draw_an_edge(U)
-        try_match(G, a, b, R, U, M, m_c)
-        # if i == 0:
-        #     break
-        # if len(prev_U) == len(U):
-        #     i -= 1
-        # if len(prev_U) != len(U):
-        #     i = 5
+        try_match(G, a, b, U, M, m_c)
+        if finish(M, G, number_of_parts):
+            break
+
+    print("lam finished")
     return convert_matched_for_return(M)
+
+
+def greedy_matching(grid):
+    while grid.G.number_of_nodes() > 50000:
+        a, b, w = grid.get_edge_with_highest_weight()
+        grid.reduce([a, b])
