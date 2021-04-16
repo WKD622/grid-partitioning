@@ -16,8 +16,9 @@ class Grid:
 
     def __init__(self, grid_name):
         start = time.time()
-        G, areas = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name)
+        G, areas, grid_size = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name)
         self.conversion_time = time.time() - start
+        self.grid_size = grid_size
         self.G = G
         self.areas = areas
         self.reductions = []
@@ -26,6 +27,7 @@ class Grid:
         self.areas_reduction_time = None
         self.drawing_graph_time = None
         self.drawing_partitioned_grid_time = None
+        self.last_number_of_partitions = len(G.nodes)
 
     def reduce(self, vertices_to_reduce):
         new_vertex_name = reduce_vertices_helper(self.G, vertices_to_reduce, NORMAL_AREA)
@@ -56,19 +58,19 @@ class Grid:
         else:
             print("No areas to restore")
 
-    def draw_initial_grid(self, p, s):
+    def draw_initial_grid(self, p, s, name='initial'):
         if len(self.reductions) == 0:
             print("drawing initial grid started...")
             start = time.time()
-            optimized_convert_graph_to_image_2(self.G, self.areas, p, s)
+            optimized_convert_graph_to_image_2(self.G, self.areas, p, s, name)
             self.drawing_initial_grid_time = time.time() - start
         else:
             print("You cannot draw initial graph due to reductions")
 
-    def draw_partitioned_grid(self, p, s):
+    def draw_partitioned_grid(self, p, s, name):
         print("drawing partitioned grid started...")
         start = time.time()
-        convert_partitioned_graph_to_image(self.G, p, s)
+        convert_partitioned_graph_to_image(self.G, p, s, self.last_number_of_partitions, name)
         self.drawing_partitioned_grid_time = time.time() - start
 
     def draw_graph(self):
@@ -101,6 +103,7 @@ class Grid:
             start = time.time()
             for match in lam_algorithm(self.G, number_of_parts):
                 self.reduce(match)
+                self.last_number_of_partitions = self.G.number_of_nodes()
             print(str(i) + ') reduce: (time: ' + str(round(time.time() - start, 2)) + " s, number of nodes: " + str(
                 self.G.number_of_nodes()) + ")")
             i += 1

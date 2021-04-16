@@ -132,7 +132,7 @@ def finish(M, G, number_of_parts):
     return (G.number_of_nodes() - len(M) / 2) == number_of_parts
 
 
-def try_match(G, a, b, U, M, m_c, h_deg):
+def try_match(G, a, b, U, M, m_c):
     C_a = set()
     C_b = set()
     while is_free(M, a) and is_free(M, b) and (
@@ -141,12 +141,12 @@ def try_match(G, a, b, U, M, m_c, h_deg):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(U, C_a, a, c)
             if get_weight(G, a, c) > get_weight(G, a, b):
-                try_match(G, a, c, U, M, m_c, h_deg)
+                try_match(G, a, c, U, M, m_c)
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(U, C_b, b, d)
             if get_weight(G, b, d) > get_weight(G, a, b):
-                try_match(G, b, d, U, M, m_c, h_deg)
+                try_match(G, b, d, U, M, m_c)
     is_free_a = is_free(M, a)
     is_free_b = is_free(M, b)
     if is_free_a and is_free_b and can_be_matched(G, a, b, m_c):
@@ -161,14 +161,13 @@ def lam_algorithm(G, number_of_parts):
     print("lam started...")
     M = {}
     U = set(G.edges)
-    h_deg, s_deg, _ = get_smallest_and_highest_degrees(G)
     h_count, s_count = get_smallest_and_highest_counts(G)
-    m_c = h_count + 2 * h_deg
+    m_c = h_count + 1.1 * s_count
 
     while len(U) != 0:
         print_progress(U, G)
         a, b = draw_an_edge(U)
-        try_match(G, a, b, U, M, m_c, h_deg)
+        try_match(G, a, b, U, M, m_c)
         if finish(M, G, number_of_parts):
             break
 

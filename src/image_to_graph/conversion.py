@@ -14,7 +14,7 @@ def get_pixel_type(pixel):
     return OFF_AREA
 
 
-def handle_area(x, y, image, pixel_type, areas_map, areas, node_num, G, initial_area_number):
+def handle_area(x, y, image, pixel_type, areas_map, areas, node_num, initial_area_number):
     if x > 0 and get_pixel_type(image[y][x - 1]) == pixel_type:
         prev_pixel_type = get_pixel_type(image[y][x - 1])
         area_number = areas_map[y][x - 1]
@@ -56,7 +56,7 @@ def convert_image_to_graph(path):
             if y > 0:
                 G.add_edge((y - 1) * image.shape[1] + x, node_num, w=1)
             if pixel_type != NORMAL_AREA:
-                initial_area_number = handle_area(x, y, image, pixel_type, areas_map, areas, node_num, G,
+                initial_area_number = handle_area(x, y, image, pixel_type, areas_map, areas, node_num,
                                                   initial_area_number)
     print("conversion finished: 100%")
-    return G, areas
+    return G, areas, image.shape[0] * image.shape[1]

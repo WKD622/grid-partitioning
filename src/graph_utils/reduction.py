@@ -1,3 +1,6 @@
+from src.definitions import OFF_AREA
+
+
 def remove_vertices(G, vertices_to_remove):
     for vertex in vertices_to_remove:
         G.remove_node(vertex)
@@ -53,6 +56,8 @@ def reduce_vertices(G, vertices_to_reduce, new_node_type):
     remove_vertices(G, vertices_to_reduce)
     new_node_data['replaces'] = replaces
     new_node_data['type'] = new_node_type
+    if new_node_type == OFF_AREA:
+        count = 0
     new_node_data['count'] = count
     new_node_data['lvl'] = get_partition_lvl(G, adj)
     G.add_node(new_node_name, data=new_node_data)
