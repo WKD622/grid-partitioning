@@ -74,7 +74,7 @@ class Grid:
     def draw_graph(self):
         print("drawing graph started...")
         start = time.time()
-        nx.draw_spectral(self.G, with_labels=True, font_weight='bold')
+        nx.draw(self.G, with_labels=True, font_weight='bold')
         self.drawing_graph_time = time.time() - start
         plt.show()
 
@@ -95,20 +95,41 @@ class Grid:
         print('---------------------------------------')
 
     def reduce_by_lam(self, number_of_parts):
-        # self.draw_graph()
         print('lam reduction stared (number of nodes: ' + str(self.G.number_of_nodes()) + ")...")
         i = 1
         while self.G.number_of_nodes() > number_of_parts:
             start = time.time()
-            matched = lam_algorithm(self.G, number_of_parts)
-            for match in matched:
+            for match in lam_algorithm(self.G, number_of_parts):
                 self.reduce(match)
-            # print(matched)
-            # self.draw_graph()
             print(str(i) + ') reduce: (time: ' + str(round(time.time() - start, 2)) + " s, number of nodes: " + str(
                 self.G.number_of_nodes()) + ")")
             i += 1
         print('lam reduction finished')
+
+    def test_dividing(self, number_of_parts):
+
+        def divide(G):
+            partition_number = 0
+            for node in G:
+                G.nodes[node]['data']['partition'] = partition_number
+                partition_number += 1
+            return partition_number
+
+        def fully_restore(G, reductions):
+            while len(reductions) > 0:
+                restore_area_helper(G, reductions.pop())
+
+        while self.G.number_of_nodes() > number_of_parts:
+            for match in lam_algorithm(self.G, number_of_parts):
+                self.reduce(match)
+                c_G = self.G.copy()
+                partitions_number = divide(c_G)
+                if partitions_number < 20:
+                    c_reductions = self.reductions.copy()
+                    c_G = self.G.copy()
+                    divide(c_G)
+                    fully_restore(c_G, c_reductions)
+                    convert_partitioned_graph_to_image(c_G, 1, 40)
 
     def divide(self):
         partition_number = 0

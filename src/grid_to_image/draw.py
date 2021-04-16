@@ -55,10 +55,19 @@ def optimized_convert_graph_to_image_2(G, areas, p, s):
     plot(X, y, colors, s, G)
 
 
+def draw_a_color():
+    return "#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+
+
+def draw_partitions_colors(number_of_colors):
+    return [draw_a_color() for i in range(number_of_colors)]
+
+
 def convert_partitioned_graph_to_image(G, p, s):
     X = []
     y = []
     colors = []
+    partitions_colors = draw_partitions_colors(len(G.nodes))
 
     for node in G.nodes:
         if random.uniform(0, 1) < p:

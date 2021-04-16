@@ -30,7 +30,7 @@ def there_are_unchecked_edges(G, U, v):
 
 
 def can_be_matched(G, a, b, m_c):
-    return G.degree[a] + G.degree[b] <= m_c
+    return G.nodes[a]['data']['count'] + G.nodes[b]['data']['count'] < m_c
 
 
 def match(M, a, b):
@@ -97,6 +97,13 @@ def get_smallest_and_highest_degrees(G):
     return highest_degree, smallest_degree, node_number
 
 
+def get_smallest_and_highest_counts(G):
+    counts = sorted(G.nodes.data(), key=lambda k: k[1]['data']['count'])
+    highest_count = counts[-1][1]['data']['count']
+    smallest_count = counts[0][1]['data']['count']
+    return highest_count, smallest_count
+
+
 def remove_adj_edges(G, U, v):
     for x in get_unchecked_edges(G, U, v):
         k, l = x
@@ -125,7 +132,7 @@ def finish(M, G, number_of_parts):
     return (G.number_of_nodes() - len(M) / 2) == number_of_parts
 
 
-def try_match(G, a, b, U, M, m_c):
+def try_match(G, a, b, U, M, m_c, h_deg):
     C_a = set()
     C_b = set()
     while is_free(M, a) and is_free(M, b) and (
@@ -134,12 +141,12 @@ def try_match(G, a, b, U, M, m_c):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(U, C_a, a, c)
             if get_weight(G, a, c) > get_weight(G, a, b):
-                try_match(G, a, c, U, M, m_c)
+                try_match(G, a, c, U, M, m_c, h_deg)
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(U, C_b, b, d)
             if get_weight(G, b, d) > get_weight(G, a, b):
-                try_match(G, b, d, U, M, m_c)
+                try_match(G, b, d, U, M, m_c, h_deg)
     is_free_a = is_free(M, a)
     is_free_b = is_free(M, b)
     if is_free_a and is_free_b and can_be_matched(G, a, b, m_c):
@@ -155,12 +162,13 @@ def lam_algorithm(G, number_of_parts):
     M = {}
     U = set(G.edges)
     h_deg, s_deg, _ = get_smallest_and_highest_degrees(G)
-    m_c = 2 * s_deg + h_deg
+    h_count, s_count = get_smallest_and_highest_counts(G)
+    m_c = h_count + 2 * h_deg
 
     while len(U) != 0:
         print_progress(U, G)
         a, b = draw_an_edge(U)
-        try_match(G, a, b, U, M, m_c)
+        try_match(G, a, b, U, M, m_c, h_deg)
         if finish(M, G, number_of_parts):
             break
 

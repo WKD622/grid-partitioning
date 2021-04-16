@@ -6,6 +6,7 @@ def remove_vertices(G, vertices_to_remove):
 def get_replaces_map(G, vertices):
     adj = set()
     replaces = {}
+    count = 0
 
     for v in vertices:
         node_data = G.nodes[v]
@@ -13,6 +14,7 @@ def get_replaces_map(G, vertices):
         node_data['adj'] = v_adj
         replaces[v] = node_data
         adj = adj | set(v_adj)
+        count += node_data['data']['count']
 
     adj = adj - vertices
     adj_with_edges_weights = set()
@@ -25,7 +27,7 @@ def get_replaces_map(G, vertices):
             new_edge_weight += G[v][v_r]['w']
         adj_with_edges_weights.add((v, new_edge_weight))
 
-    return replaces, adj, adj_with_edges_weights
+    return replaces, adj, adj_with_edges_weights, count
 
 
 def get_partition_lvl(G, adj):
@@ -47,10 +49,11 @@ def add_edges(G, vertex, vertices):
 def reduce_vertices(G, vertices_to_reduce, new_node_type):
     new_node_data = {}
     new_node_name = next(iter(vertices_to_reduce))
-    replaces, adj, adj_with_edges_weights = get_replaces_map(G, vertices_to_reduce)
+    replaces, adj, adj_with_edges_weights, count = get_replaces_map(G, vertices_to_reduce)
     remove_vertices(G, vertices_to_reduce)
     new_node_data['replaces'] = replaces
     new_node_data['type'] = new_node_type
+    new_node_data['count'] = count
     new_node_data['lvl'] = get_partition_lvl(G, adj)
     G.add_node(new_node_name, data=new_node_data)
     add_edges(G, new_node_name, adj_with_edges_weights)
