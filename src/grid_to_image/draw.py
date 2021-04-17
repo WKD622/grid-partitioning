@@ -6,7 +6,7 @@ from src.definitions import NORMAL_AREA, INDIVISIBLE_AREA, OFF_AREA, colors_for_
 from src.grid_to_image.helpers import get_color
 
 
-def plot(X, y, colors, s, G, name):
+def plot(X, y, colors, s, G, name, save=False):
     for i in range(len(X)):
         plt.scatter(X[i], y[i], color=colors[i], marker="s", s=s)
     plt.gca().invert_yaxis()
@@ -14,8 +14,10 @@ def plot(X, y, colors, s, G, name):
     plt.tight_layout()
     plt.xlim(0, G.graph['shape'][1] - 1)
     plt.ylim(G.graph['shape'][0] - 1, 0)
-    # plt.show(pad_inches=0)
-    plt.savefig("out/" + name + '.png')
+    if save:
+        plt.savefig("out/" + name + '.png')
+    else:
+        plt.show(pad_inches=0)
     plt.clf()
 
 
@@ -65,7 +67,7 @@ def draw_partitions_colors(number_of_colors):
     return [draw_a_color() for i in range(number_of_colors)]
 
 
-def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, name):
+def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, name, save=False):
     X = []
     y = []
     colors = []
@@ -80,4 +82,4 @@ def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, name):
             y.append(G.nodes[node]['data']['y'])
             colors.append(partitions_colors[G.nodes[node]['data']['partition']])
 
-    plot(X, y, colors, s, G, name)
+    plot(X, y, colors, s, G, name, save)

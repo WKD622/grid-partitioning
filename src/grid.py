@@ -67,10 +67,10 @@ class Grid:
         else:
             print("You cannot draw initial graph due to reductions")
 
-    def draw_partitioned_grid(self, p, s, name):
+    def draw_partitioned_grid(self, p, s, name='output', save=False):
         print("drawing partitioned grid started...")
         start = time.time()
-        convert_partitioned_graph_to_image(self.G, p, s, self.last_number_of_partitions, name)
+        convert_partitioned_graph_to_image(self.G, p, s, self.last_number_of_partitions, name, save)
         self.drawing_partitioned_grid_time = time.time() - start
 
     def draw_graph(self):
@@ -96,6 +96,23 @@ class Grid:
             print('drawing partitioned grid: ' + str(round(self.drawing_partitioned_grid_time, 6)) + ' s')
         print('---------------------------------------')
 
+    def prepartition_areas(self, number_of_parts):
+        new_number_of_parts = number_of_parts
+        removed_vertices = {}
+        for vertex_num in self.reductions:
+            area_size = self.G.nodes[vertex_num]['data']['count']
+            if area_size > 1.3 * (self.grid_size / number_of_parts):
+                removed_vertices[vertex_num] = self.G.nodes[vertex_num]
+                self.G.remove_node(vertex_num)
+                new_number_of_parts -= 1
+
+        return new_number_of_parts, removed_vertices
+
+    def revert_prepartitioned_areas(self, removed_vertices):
+
+        for vertex_num, vertex_data in removed_vertices:
+            self.G.add_node()
+
     def reduce_by_lam(self, number_of_parts):
         print('lam reduction stared (number of nodes: ' + str(self.G.number_of_nodes()) + ")...")
         i = 1
@@ -108,31 +125,6 @@ class Grid:
                 self.G.number_of_nodes()) + ")")
             i += 1
         print('lam reduction finished')
-
-    def test_dividing(self, number_of_parts):
-
-        def divide(G):
-            partition_number = 0
-            for node in G:
-                G.nodes[node]['data']['partition'] = partition_number
-                partition_number += 1
-            return partition_number
-
-        def fully_restore(G, reductions):
-            while len(reductions) > 0:
-                restore_area_helper(G, reductions.pop())
-
-        while self.G.number_of_nodes() > number_of_parts:
-            for match in lam_algorithm(self.G, number_of_parts):
-                self.reduce(match)
-                c_G = self.G.copy()
-                partitions_number = divide(c_G)
-                if partitions_number < 20:
-                    c_reductions = self.reductions.copy()
-                    c_G = self.G.copy()
-                    divide(c_G)
-                    fully_restore(c_G, c_reductions)
-                    convert_partitioned_graph_to_image(c_G, 1, 40)
 
     def divide(self):
         partition_number = 0
