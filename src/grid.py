@@ -9,7 +9,7 @@ from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduc
 from src.graph_utils.restoration import restore_area as restore_area_helper
 from src.grid_to_image.draw import optimized_convert_graph_to_image_2, convert_partitioned_graph_to_image
 from src.image_to_graph.conversion import convert_image_to_graph
-from src.utils import get_project_root
+from src.utils import get_project_root, print_infos
 
 
 class Grid:
@@ -34,24 +34,22 @@ class Grid:
         new_vertex_name = reduce_vertices_helper(self.G, vertices_to_reduce, NORMAL_AREA)
         self.reductions.append(new_vertex_name)
 
+    @print_infos
     def reduce_areas(self):
-        print('reducing areas started...')
         start = time.time()
         new_vertices_names = reduce_areas_helper(self.G, self.areas)
         self.reductions = self.reductions + new_vertices_names
         self.areas_reduction_time = time.time() - start
-        print('reducing areas finished')
 
     def restore_area(self, vertex):
         restore_area_helper(self.G, vertex)
 
+    @print_infos
     def fully_restore(self):
-        print('full restoration started')
         start = time.time()
         while len(self.reductions) > 0:
             self.restore_one_step()
         self.full_restoration_time = time.time() - start
-        print('full restoration finished')
 
     def restore_one_step(self):
         if len(self.reductions) > 0:
@@ -59,23 +57,23 @@ class Grid:
         else:
             print("No areas to restore")
 
+    @print_infos
     def draw_initial_grid(self, p, s, name='initial'):
         if len(self.reductions) == 0:
-            print("drawing initial grid started...")
             start = time.time()
             optimized_convert_graph_to_image_2(self.G, self.areas, p, s, name)
             self.drawing_initial_grid_time = time.time() - start
         else:
             print("You cannot draw initial graph due to reductions")
 
+    @print_infos
     def draw_partitioned_grid(self, p, s, name='output', save=False):
-        print("drawing partitioned grid started...")
         start = time.time()
         convert_partitioned_graph_to_image(self.G, p, s, self.last_number_of_partitions, name, save)
         self.drawing_partitioned_grid_time = time.time() - start
 
+    @print_infos
     def draw_graph(self):
-        print("drawing graph started...")
         start = time.time()
         nx.draw(self.G, with_labels=True, font_weight='bold')
         self.drawing_graph_time = time.time() - start
@@ -88,8 +86,8 @@ class Grid:
             graph_size = graph_size / 2
         return i
 
+    @print_infos
     def reduce_by_lam(self, number_of_partitions):
-        print('lam reduction stared (number of nodes: ' + str(self.G.number_of_nodes()) + ")...")
         i = 1
         T = self.calculate_maximal_number_of_episodes(self.G.number_of_nodes(), number_of_partitions)
         while self.G.number_of_nodes() > number_of_partitions:
@@ -97,24 +95,11 @@ class Grid:
             for match in lam_algorithm(self.G, number_of_partitions, T, i):
                 self.reduce(match)
                 self.last_number_of_partitions = self.G.number_of_nodes()
-            print(str(i) + ') reduce: (time: ' + str(round(time.time() - start, 2)) + " s, number of nodes: " + str(
-                self.G.number_of_nodes()) + ")")
+            print('{}) reduce: {:<3} s | nodes: {}'.format(i, round(time.time() - start, 2), self.G.number_of_nodes()))
             i += 1
-        print('lam reduction finished')
 
     def add_to_area_stats(self, partition_number, area_size, proportional_size):
         self.areas_stats[partition_number] = {'area_size': area_size, 'proportional_size': proportional_size}
-
-    def print_areas_stats(self):
-        print('\n-------------------------- AREAS STATS --------------------------')
-        if not len(self.areas_stats):
-            print("No partitions to print information about.")
-            return
-
-        for partition_number, data in self.areas_stats.items():
-            print('partition: {:>3} | proportional size: {:>3}% | size:  {}'.format(partition_number, round(
-                data['proportional_size'] * 100), data['area_size']))
-        print('-----------------------------------------------------------------')
 
     def partition(self):
         partition_number = 0
@@ -148,20 +133,31 @@ class Grid:
     def greedy_matching(self):
         start = time.time()
         greedy_matching_helper(self)
-        print('greedy matching time: ' + str(round(time.time() - start, 6)) + ' s')
+        print('greedy matching time: {} s'.format(round(time.time() - start, 6)))
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
         if self.conversion_time:
-            print('conversion ' + str(round(self.conversion_time, 6)) + ' s')
+            print('conversion: {} s'.format(round(self.conversion_time, 6)))
         if self.areas_reduction_time:
-            print('areas reduction: ' + str(round(self.areas_reduction_time, 6)) + ' s')
+            print('areas reduction: {} s'.format(round(self.areas_reduction_time, 6)))
         if self.full_restoration_time:
-            print('full restoration time: ' + str(round(self.full_restoration_time, 6)) + ' s')
+            print('full restoration time: {} s'.format(round(self.full_restoration_time, 6)))
         if self.drawing_initial_grid_time:
-            print('drawing initial grid: ' + str(round(self.drawing_initial_grid_time, 2)) + ' s')
+            print('drawing initial grid: {} s'.format(round(self.drawing_initial_grid_time, 2)))
         if self.drawing_graph_time:
-            print('drawing graph: ' + str(round(self.drawing_graph_time, 6)) + ' s')
+            print('drawing graph: {} s'.format(round(self.drawing_graph_time, 6)))
         if self.drawing_partitioned_grid_time:
-            print('drawing partitioned grid: ' + str(round(self.drawing_partitioned_grid_time, 6)) + ' s')
+            print('drawing partitioned grid: {} s'.format(round(self.drawing_partitioned_grid_time, 6)))
         print('---------------------------------------')
+
+    def print_areas_stats(self):
+        print('\n-------------------------- AREAS STATS --------------------------')
+        if not len(self.areas_stats):
+            print("No partitions to print information about.")
+            return
+
+        for partition_number, data in self.areas_stats.items():
+            print('partition: {:>3} | proportional size: {:>3}% | size:  {}'.format(partition_number, round(
+                data['proportional_size'] * 100), data['area_size']))
+        print('-----------------------------------------------------------------')

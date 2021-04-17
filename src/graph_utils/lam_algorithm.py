@@ -1,6 +1,8 @@
 import math
 import random
 
+from src.utils import print_infos
+
 
 def is_free(M, v):
     return v not in M
@@ -160,8 +162,8 @@ def try_match(G, a, b, U, M, h_weight, s_weight, T, t, number_of_partitions):
         restore_all_free_edges(U, M, C_a, a)
 
 
+@print_infos
 def lam_algorithm(G, number_of_partitions, T, t):
-    print("lam started...")
     M = {}
     U = set(G.edges)
     h_weight, s_weight = get_smallest_and_highest_weights(G)
@@ -173,7 +175,6 @@ def lam_algorithm(G, number_of_partitions, T, t):
         if finish(M, G, number_of_partitions):
             break
 
-    print("lam finished")
     return convert_matched_for_return(M)
 
 
