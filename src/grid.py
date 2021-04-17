@@ -24,6 +24,7 @@ class Grid:
         self.reductions = []
         self.drawing_initial_grid_time = None
         self.full_restoration_time = None
+        self.lam_reduction_time = None
         self.areas_reduction_time = None
         self.drawing_graph_time = None
         self.drawing_partitioned_grid_time = None
@@ -88,15 +89,17 @@ class Grid:
 
     @print_infos
     def reduce_by_lam(self, number_of_partitions):
+        general_start = time.time()
         i = 1
         T = self.calculate_maximal_number_of_episodes(self.G.number_of_nodes(), number_of_partitions)
         while self.G.number_of_nodes() > number_of_partitions:
             start = time.time()
-            for match in lam_algorithm(self.G, number_of_partitions, T, i):
+            for match in lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size):
                 self.reduce(match)
                 self.last_number_of_partitions = self.G.number_of_nodes()
             print('{}) reduce: {:<3} s | nodes: {}'.format(i, round(time.time() - start, 2), self.G.number_of_nodes()))
             i += 1
+        self.lam_reduction_time = time.time() - general_start
 
     def add_to_area_stats(self, partition_number, area_size, proportional_size):
         self.areas_stats[partition_number] = {'area_size': area_size, 'proportional_size': proportional_size}
@@ -141,6 +144,8 @@ class Grid:
             print('conversion: {} s'.format(round(self.conversion_time, 6)))
         if self.areas_reduction_time:
             print('areas reduction: {} s'.format(round(self.areas_reduction_time, 6)))
+        if self.lam_reduction_time:
+            print('lam reduction: {} s'.format(round(self.lam_reduction_time, 6)))
         if self.full_restoration_time:
             print('full restoration time: {} s'.format(round(self.full_restoration_time, 6)))
         if self.drawing_initial_grid_time:
