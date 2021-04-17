@@ -1,3 +1,4 @@
+import math
 import random
 
 
@@ -29,8 +30,10 @@ def there_are_unchecked_edges(G, U, v):
     return bool(get_unchecked_edges(G, U, v))
 
 
-def can_be_matched(G, a, b, m_c):
-    return G.nodes[a]['data']['count'] + G.nodes[b]['data']['count'] < m_c
+def can_be_matched(G, a, b, h_weight, s_weight, T, t, number_of_partitions):
+    sum_weight_of_nodes = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
+    return (sum_weight_of_nodes <= (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions))) *
+            (h_weight + s_weight))
 
 
 def match(M, a, b):
@@ -97,11 +100,11 @@ def get_smallest_and_highest_degrees(G):
     return highest_degree, smallest_degree, node_number
 
 
-def get_smallest_and_highest_counts(G):
-    counts = sorted(G.nodes.data(), key=lambda k: k[1]['data']['count'])
-    highest_count = counts[-1][1]['data']['count']
-    smallest_count = counts[0][1]['data']['count']
-    return highest_count, smallest_count
+def get_smallest_and_highest_weights(G):
+    weights = sorted(G.nodes.data(), key=lambda k: k[1]['data']['weight'])
+    highest_weight = weights[-1][1]['data']['weight']
+    smallest_weight = weights[0][1]['data']['weight']
+    return highest_weight, smallest_weight
 
 
 def remove_adj_edges(G, U, v):
@@ -128,11 +131,11 @@ def print_progress(U, G):
         print("lam progress: " + str(round((1 - len(U) / int(G.number_of_edges())) * 100)) + "%")
 
 
-def finish(M, G, number_of_parts):
-    return (G.number_of_nodes() - len(M) / 2) == number_of_parts
+def finish(M, G, number_of_partitions):
+    return (G.number_of_nodes() - len(M) / 2) == number_of_partitions
 
 
-def try_match(G, a, b, U, M, m_c):
+def try_match(G, a, b, U, M, h_weight, s_weight, T, t, number_of_partitions):
     C_a = set()
     C_b = set()
     while is_free(M, a) and is_free(M, b) and (
@@ -141,15 +144,15 @@ def try_match(G, a, b, U, M, m_c):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(U, C_a, a, c)
             if get_weight(G, a, c) > get_weight(G, a, b):
-                try_match(G, a, c, U, M, m_c)
+                try_match(G, a, c, U, M, h_weight, s_weight, T, t, number_of_partitions)
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(U, C_b, b, d)
             if get_weight(G, b, d) > get_weight(G, a, b):
-                try_match(G, b, d, U, M, m_c)
+                try_match(G, b, d, U, M, h_weight, s_weight, T, t, number_of_partitions)
     is_free_a = is_free(M, a)
     is_free_b = is_free(M, b)
-    if is_free_a and is_free_b and can_be_matched(G, a, b, m_c):
+    if is_free_a and is_free_b and can_be_matched(G, a, b, h_weight, s_weight, T, t, number_of_partitions):
         match(M, a, b)
     elif is_matched(M, a) and is_free_b:
         restore_all_free_edges(U, M, C_b, b)
@@ -157,18 +160,17 @@ def try_match(G, a, b, U, M, m_c):
         restore_all_free_edges(U, M, C_a, a)
 
 
-def lam_algorithm(G, number_of_parts):
+def lam_algorithm(G, number_of_partitions, T, t):
     print("lam started...")
     M = {}
     U = set(G.edges)
-    h_count, s_count = get_smallest_and_highest_counts(G)
-    m_c = h_count + 1.1 * s_count
+    h_weight, s_weight = get_smallest_and_highest_weights(G)
 
     while len(U) != 0:
         print_progress(U, G)
         a, b = draw_an_edge(U)
-        try_match(G, a, b, U, M, m_c)
-        if finish(M, G, number_of_parts):
+        try_match(G, a, b, U, M, h_weight, s_weight, T, t, number_of_partitions)
+        if finish(M, G, number_of_partitions):
             break
 
     print("lam finished")

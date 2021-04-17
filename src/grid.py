@@ -27,7 +27,8 @@ class Grid:
         self.areas_reduction_time = None
         self.drawing_graph_time = None
         self.drawing_partitioned_grid_time = None
-        self.last_number_of_partitions = len(G.nodes)
+        self.areas_stats = {}
+        self.last_number_of_partitions = G.number_of_nodes()
 
     def reduce(self, vertices_to_reduce):
         new_vertex_name = reduce_vertices_helper(self.G, vertices_to_reduce, NORMAL_AREA)
@@ -80,45 +81,20 @@ class Grid:
         self.drawing_graph_time = time.time() - start
         plt.show()
 
-    def print_execution_times(self):
-        print('\n----------- EXECUTION TIMES -----------')
-        if self.conversion_time:
-            print('conversion ' + str(round(self.conversion_time, 6)) + ' s')
-        if self.areas_reduction_time:
-            print('areas reduction: ' + str(round(self.areas_reduction_time, 6)) + ' s')
-        if self.full_restoration_time:
-            print('full restoration time: ' + str(round(self.full_restoration_time, 6)) + ' s')
-        if self.drawing_initial_grid_time:
-            print('drawing initial grid: ' + str(round(self.drawing_initial_grid_time, 2)) + ' s')
-        if self.drawing_graph_time:
-            print('drawing graph: ' + str(round(self.drawing_graph_time, 6)) + ' s')
-        if self.drawing_partitioned_grid_time:
-            print('drawing partitioned grid: ' + str(round(self.drawing_partitioned_grid_time, 6)) + ' s')
-        print('---------------------------------------')
+    def calculate_maximal_number_of_episodes(self, graph_size, number_of_partitions):
+        i = 0
+        while graph_size / 2 > number_of_partitions:
+            i += 1
+            graph_size = graph_size / 2
+        return i
 
-    def prepartition_areas(self, number_of_parts):
-        new_number_of_parts = number_of_parts
-        removed_vertices = {}
-        for vertex_num in self.reductions:
-            area_size = self.G.nodes[vertex_num]['data']['count']
-            if area_size > 1.3 * (self.grid_size / number_of_parts):
-                removed_vertices[vertex_num] = self.G.nodes[vertex_num]
-                self.G.remove_node(vertex_num)
-                new_number_of_parts -= 1
-
-        return new_number_of_parts, removed_vertices
-
-    def revert_prepartitioned_areas(self, removed_vertices):
-
-        for vertex_num, vertex_data in removed_vertices:
-            self.G.add_node()
-
-    def reduce_by_lam(self, number_of_parts):
+    def reduce_by_lam(self, number_of_partitions):
         print('lam reduction stared (number of nodes: ' + str(self.G.number_of_nodes()) + ")...")
         i = 1
-        while self.G.number_of_nodes() > number_of_parts:
+        T = self.calculate_maximal_number_of_episodes(self.G.number_of_nodes(), number_of_partitions)
+        while self.G.number_of_nodes() > number_of_partitions:
             start = time.time()
-            for match in lam_algorithm(self.G, number_of_parts):
+            for match in lam_algorithm(self.G, number_of_partitions, T, i):
                 self.reduce(match)
                 self.last_number_of_partitions = self.G.number_of_nodes()
             print(str(i) + ') reduce: (time: ' + str(round(time.time() - start, 2)) + " s, number of nodes: " + str(
@@ -126,10 +102,33 @@ class Grid:
             i += 1
         print('lam reduction finished')
 
-    def divide(self):
+    def add_to_area_stats(self, partition_number, area_size, proportional_size):
+        self.areas_stats[partition_number] = {'area_size': area_size, 'proportional_size': proportional_size}
+
+    def print_areas_stats(self):
+        print('\n-------------------------- AREAS STATS --------------------------')
+        if not len(self.areas_stats):
+            print("No partitions to print information about.")
+            return
+
+        for partition_number, data in self.areas_stats.items():
+            print('partition: {:>3} | proportional size: {:>3}% | size:  {}'.format(partition_number, round(
+                data['proportional_size'] * 100), data['area_size']))
+        print('-----------------------------------------------------------------')
+
+    def partition(self):
         partition_number = 0
+        sum = 0
         for node in self.G.nodes:
             self.G.nodes[node]['data']['partition'] = partition_number
+            sum += self.G.nodes[node]['data']['weight']
+            partition_number += 1
+
+        partition_number = 0
+        for node in self.G.nodes:
+            self.add_to_area_stats(partition_number,
+                                   self.G.nodes[node]['data']['weight'],
+                                   self.G.nodes[node]['data']['weight'] / sum)
             partition_number += 1
 
     def get_highest_degree(self):
@@ -150,3 +149,19 @@ class Grid:
         start = time.time()
         greedy_matching_helper(self)
         print('greedy matching time: ' + str(round(time.time() - start, 6)) + ' s')
+
+    def print_execution_times(self):
+        print('\n----------- EXECUTION TIMES -----------')
+        if self.conversion_time:
+            print('conversion ' + str(round(self.conversion_time, 6)) + ' s')
+        if self.areas_reduction_time:
+            print('areas reduction: ' + str(round(self.areas_reduction_time, 6)) + ' s')
+        if self.full_restoration_time:
+            print('full restoration time: ' + str(round(self.full_restoration_time, 6)) + ' s')
+        if self.drawing_initial_grid_time:
+            print('drawing initial grid: ' + str(round(self.drawing_initial_grid_time, 2)) + ' s')
+        if self.drawing_graph_time:
+            print('drawing graph: ' + str(round(self.drawing_graph_time, 6)) + ' s')
+        if self.drawing_partitioned_grid_time:
+            print('drawing partitioned grid: ' + str(round(self.drawing_partitioned_grid_time, 6)) + ' s')
+        print('---------------------------------------')

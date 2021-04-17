@@ -50,7 +50,7 @@ def convert_image_to_graph(path):
             node_num = y * image.shape[1] + x
             print_progress(node_num, number_of_vertices)
             pixel_type = get_pixel_type(image[y][x])
-            G.add_node(node_num, data={'type': pixel_type, 'x': x, 'y': y, 'num': node_num, 'lvl': 0, 'count': 1})
+            G.add_node(node_num, data={'type': pixel_type, 'x': x, 'y': y, 'num': node_num, 'lvl': 0, 'weight': 1})
             if x > 0:
                 G.add_edge(y * image.shape[1] + x - 1, node_num, w=1)
             if y > 0:
