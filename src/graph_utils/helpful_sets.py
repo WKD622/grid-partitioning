@@ -23,14 +23,30 @@ def get_neighbouring_partitions(G):
     return neighbouring_partitions
 
 
-def set_helpfulness(G, helpful_set):
+def include_in_helpful_set(G, v_num, helpful_set):
+    helpful_set.add(v_num)
+    update_helpfulness_of_neighbours(G, v_num)
+
+
+def update_helpfulness_of_neighbours(G, v_num):
+    partition = G.nodes[v_num]['data']['partition']
+    for node_num in G.adj[v_num]:
+        if G.nodes[node_num]['data']['partition'] == partition:
+            G.nodes[node_num]['data']['helpfulness'] += 2
+
+
+def count_set_helpfulness(G, helpful_set):
     helpfulness = 0
     for vertex_num in helpful_set:
-        helpfulness += vertex_helpfulness(G, vertex_num, helpful_set)
+        helpfulness += G.nodes[vertex_num]['data']['helpfulness']
     return helpfulness
 
 
-def vertex_helpfulness(G, v_num, helpful_set):
+def set_vertex_helpfulness(G, v_num, helpful_set):
+    G.nodes[v_num]['data']['helpfulness'] = count_vertex_helpfulness(G, v_num, helpful_set)
+
+
+def count_vertex_helpfulness(G, v_num, helpful_set):
     return v_ext(G, v_num) - v_int(G, v_num) + v_int_s(G, v_num, helpful_set)
 
 
