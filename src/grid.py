@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from src.definitions import NORMAL_AREA
+from src.graph_utils.helpful_sets import get_adjacent_partitions, get_partitions_vertices
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
@@ -30,6 +31,8 @@ class Grid:
         self.drawing_partitioned_grid_time = None
         self.areas_stats = {}
         self.last_number_of_partitions = G.number_of_nodes()
+        self.partitions_vertices = None
+        self.adjacent_partitions = None
 
     def reduce(self, vertices_to_reduce):
         new_vertex_name = reduce_vertices_helper(self.G, vertices_to_reduce, NORMAL_AREA)
@@ -106,18 +109,29 @@ class Grid:
 
     def partition(self):
         partition_number = 0
-        sum = 0
+        sum_weight = 0
         for node in self.G.nodes:
             self.G.nodes[node]['data']['partition'] = partition_number
-            sum += self.G.nodes[node]['data']['weight']
+            sum_weight += self.G.nodes[node]['data']['weight']
             partition_number += 1
 
+        self.fill_stats(sum_weight)
+        self.set_adjacent_partitions()
+        self.set_partitions_vertices()
+
+    def fill_stats(self, sum_weight):
         partition_number = 0
         for node in self.G.nodes:
             self.add_to_area_stats(partition_number,
                                    self.G.nodes[node]['data']['weight'],
-                                   self.G.nodes[node]['data']['weight'] / sum)
+                                   self.G.nodes[node]['data']['weight'] / sum_weight)
             partition_number += 1
+
+    def set_adjacent_partitions(self):
+        self.adjacent_partitions = get_adjacent_partitions(self.G)
+
+    def set_partitions_vertices(self):
+        self.partitions_vertices = get_partitions_vertices(self.G)
 
     def get_highest_degree(self):
         degrees = sorted(d for n, d in self.G.degree())

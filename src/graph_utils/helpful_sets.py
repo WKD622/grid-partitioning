@@ -14,7 +14,7 @@ def get_partition_vertices(vertices_data, vertex_num, vertices):
             get_partition_vertices(data['data'], vertex, vertices)
 
 
-def get_neighbouring_partitions(G):
+def get_adjacent_partitions(G):
     neighbouring_partitions = {}
     for node_num in G.nodes:
         neighbouring_partitions[G.nodes[node_num]['data']['partition']] = set()
