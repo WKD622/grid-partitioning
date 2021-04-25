@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from src.definitions import NORMAL_AREA
-from src.graph_utils.helpful_sets import get_adjacent_partitions, get_partitions_vertices
+from src.graph_utils.helpful_sets import get_adjacent_partitions, get_partitions_vertices, count_cut_size
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
@@ -83,8 +83,9 @@ class Grid:
         self.drawing_graph_time = time.time() - start
         plt.show()
 
-    def calculate_maximal_number_of_episodes(self, graph_size, number_of_partitions):
+    def calculate_maximal_number_of_episodes(self, number_of_partitions):
         i = 0
+        graph_size = self.G.number_of_nodes()
         while graph_size / 2 > number_of_partitions:
             i += 1
             graph_size = graph_size / 2
@@ -94,7 +95,7 @@ class Grid:
     def reduce_by_lam(self, number_of_partitions):
         general_start = time.time()
         i = 1
-        T = self.calculate_maximal_number_of_episodes(self.G.number_of_nodes(), number_of_partitions)
+        T = self.calculate_maximal_number_of_episodes(number_of_partitions)
         while self.G.number_of_nodes() > number_of_partitions:
             start = time.time()
             for match in lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size):
@@ -151,6 +152,13 @@ class Grid:
         start = time.time()
         greedy_matching_helper(self)
         print('greedy matching time: {} s'.format(round(time.time() - start, 6)))
+
+    def get_cut_size(self, partition_number):
+        if not self.partitions_vertices:
+            print('First partition your graph')
+            return
+
+        return count_cut_size(self.G, self.partitions_vertices[partition_number], partition_number)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')

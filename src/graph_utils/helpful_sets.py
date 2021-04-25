@@ -78,3 +78,14 @@ def v_int_s(G, node_num, helpful_set):
             counter += 1
 
     return counter
+
+
+def count_cut_size(G, partition, partition_number):
+    # TODO can be improved when it comes to complexity
+    border = set()
+    for node_num in partition:
+        for adjacent_node_num in G.adj[node_num]:
+            if G.nodes[adjacent_node_num]['data']['partition'] != partition_number:
+                border.add(adjacent_node_num)
+
+    return len(border)
