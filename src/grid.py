@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from src.definitions import NORMAL_AREA
-from src.graph_utils.helpful_sets import get_adjacent_partitions, get_partitions_vertices, count_cut_size
+from src.graph_utils.helpful_sets.algorithm import improve_bisection
+from src.graph_utils.helpful_sets.helpers import count_cut_size, get_partitions_vertices, get_adjacent_partitions
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
@@ -29,7 +30,7 @@ class Grid:
         self.areas_reduction_time = None
         self.drawing_graph_time = None
         self.drawing_partitioned_grid_time = None
-        self.areas_stats = {}
+        self.partitions_stats = {}
         self.last_number_of_partitions = G.number_of_nodes()
         self.partitions_vertices = None
         self.adjacent_partitions = None
@@ -105,8 +106,9 @@ class Grid:
             i += 1
         self.lam_reduction_time = time.time() - general_start
 
-    def add_to_area_stats(self, partition_number, area_size, proportional_size):
-        self.areas_stats[partition_number] = {'area_size': area_size, 'proportional_size': proportional_size}
+    def add_to_partitions_stats(self, partition_number, partition_size, proportional_size):
+        self.partitions_stats[partition_number] = {'partition_size': partition_size,
+                                                   'proportional_size': proportional_size}
 
     def partition(self):
         partition_number = 0
@@ -123,9 +125,9 @@ class Grid:
     def fill_stats(self, sum_weight):
         partition_number = 0
         for node in self.G.nodes:
-            self.add_to_area_stats(partition_number,
-                                   self.G.nodes[node]['data']['weight'],
-                                   self.G.nodes[node]['data']['weight'] / sum_weight)
+            self.add_to_partitions_stats(partition_number,
+                                         self.G.nodes[node]['data']['weight'],
+                                         self.G.nodes[node]['data']['weight'] / sum_weight)
             partition_number += 1
 
     def set_adjacent_partitions(self):
@@ -160,6 +162,11 @@ class Grid:
 
         return count_cut_size(self.G, self.partitions_vertices[partition_number], partition_number)
 
+    def improve_partitioning(self):
+        for partition, neighbours in self.adjacent_partitions.items():
+            for vertex in neighbours:
+                improve_bisection(self.G, vertex, partition, self.partitions_vertices, self.draw_partitioned_grid)
+
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
         if self.conversion_time:
@@ -180,11 +187,11 @@ class Grid:
 
     def print_areas_stats(self):
         print('\n-------------------------- AREAS STATS --------------------------')
-        if not len(self.areas_stats):
+        if not len(self.partitions_stats):
             print("No partitions to print information about.")
             return
 
-        for partition_number, data in self.areas_stats.items():
+        for partition_number, data in self.partitions_stats.items():
             print('partition: {:>3} | proportional size: {:>3}% | size:  {}'.format(partition_number, round(
-                data['proportional_size'] * 100), data['area_size']))
+                data['proportional_size'] * 100), data['partition_size']))
         print('-----------------------------------------------------------------')
