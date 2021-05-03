@@ -142,3 +142,11 @@ def pop_vertex(vertices_helpfulness):
     vertex_helpfulness = vertex_data['helpfulness']
     vertex_num = vertex_data['v_num']
     return vertex_num, vertex_helpfulness
+
+
+def add_vertex_and_update_sets(G, v_num, v_helpfulness, helpful_set, set_helpfulness, vertices_helpfulness):
+    helpful_set.add(v_num)
+    set_helpfulness += v_helpfulness
+    update_helpfulness_of_neighbours(G, v_num, vertices_helpfulness)
+    sort_vertices_helpfulness(vertices_helpfulness)
+    return set_helpfulness
