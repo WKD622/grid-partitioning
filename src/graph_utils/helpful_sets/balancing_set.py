@@ -1,7 +1,7 @@
 import operator
 
 from src.graph_utils.helpful_sets.helpers import update_helpfulness_of_neighbours, sort_vertices_helpfulness, \
-    pop_vertex, add_vertex_and_update_sets
+    add_vertex_and_update_sets, pop_vertex_b_s, pop_vertex
 
 
 def compute_k_prime(S_helpfulness, S_dash_helpfulness):
@@ -14,7 +14,7 @@ def min_diff_value_to_consider(S_helpfulness, S_dash_helpfulness):
 
 def filter_diff_values(vertices_helpfulness, S_helpfulness, S_dash_helpfulness):
     min_diff_val = min_diff_value_to_consider(S_helpfulness, S_dash_helpfulness)
-    return list(filter(lambda vertex: vertex['helpfulness'] > min_diff_val, vertices_helpfulness))
+    return list(filter(lambda vertex: vertex['helpfulness'] >= min_diff_val, vertices_helpfulness))
 
 
 def contains_proper_diff_values(vertices_helpfulness, k_prime, S_dash_helpfulness):
@@ -84,21 +84,31 @@ def pop_2_set(_2_coll):
 
 def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
     _2_coll = []
+
     while (len(S_dash) < S_size
            and contains_proper_diff_values(big_set, S_helpfulness, S_dash_helpfulness)):
         vertices_to_consider = filter_diff_values(big_set, S_helpfulness, S_dash_helpfulness)
 
-        v_num, v_helpfulness = pop_vertex(vertices_to_consider)
+        big_set_copy = big_set.copy()
+        v_num, v_helpfulness = pop_vertex_b_s(vertices_to_consider, big_set)
         _2_set, _2_set_helpfulness = _init_2_set()
-        _2_set_helpfulness = add_vertex_and_update_sets(G, v_num, v_helpfulness, _2_set, _2_set_helpfulness,
-                                                        vertices_to_consider)
+        _2_set_helpfulness = add_vertex_and_update_sets(G=G,
+                                                        v_num=v_num,
+                                                        v_helpfulness=v_helpfulness,
+                                                        helpful_set=_2_set,
+                                                        set_helpfulness=_2_set_helpfulness,
+                                                        big_set=big_set)
 
         while (_2_set_helpfulness < 0
                and len(_2_set) + len(S_dash) < S_size
-               and contains_diff_values_greater_than_0(vertices_to_consider)):
-            v_num, v_helpfulness = pop_vertex(vertices_to_consider)
-            _2_set_helpfulness = add_vertex_and_update_sets(G, v_num, v_helpfulness, _2_set, _2_set_helpfulness,
-                                                            vertices_to_consider)
+               and contains_diff_values_greater_than_0(big_set)):
+            v_num, v_helpfulness = pop_vertex(big_set)
+            _2_set_helpfulness = add_vertex_and_update_sets(G=G,
+                                                            v_num=v_num,
+                                                            v_helpfulness=v_helpfulness,
+                                                            helpful_set=_2_set,
+                                                            set_helpfulness=_2_set_helpfulness,
+                                                            big_set=big_set)
 
         if _2_set_helpfulness >= 0:
             S_dash |= _2_set
@@ -109,8 +119,10 @@ def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
                 else:
                     pass
         elif len(_2_set) + len(S_dash) == S_size:
+            # update diff values for vertices which are in _2_coll
             S_dash |= _2_set
         else:
+            big_set = big_set_copy
             add_set_to_2_coll(_2_set, _2_set_helpfulness, _2_coll)
             sort_2_coll_on_helpfulness(_2_coll)
 
