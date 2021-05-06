@@ -145,12 +145,12 @@ def try_match(G, a, b, U, M, h_weight, s_weight, T, t, number_of_partitions, gri
         if is_free(M, a) and there_are_unchecked_edges(G, U, a):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(U, C_a, a, c)
-            if get_weight(G, a, c) >= get_weight(G, a, b):
+            if get_weight(G, a, c) > get_weight(G, a, b):
                 try_match(G, a, c, U, M, h_weight, s_weight, T, t, number_of_partitions, grid_size)
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(U, C_b, b, d)
-            if get_weight(G, b, d) >= get_weight(G, a, b):
+            if get_weight(G, b, d) > get_weight(G, a, b):
                 try_match(G, b, d, U, M, h_weight, s_weight, T, t, number_of_partitions, grid_size)
     is_free_a = is_free(M, a)
     is_free_b = is_free(M, b)

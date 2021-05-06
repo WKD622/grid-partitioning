@@ -4,13 +4,12 @@ from src.graph_utils.helpful_sets.helpers import set_helpfulness_for_vertices, c
 from src.graph_utils.helpful_sets.helpful_set import search_for_helpful_set
 
 
-def improve_bisection(G, partition_a, partition_b, partitions_vertices, draw):
+def improve_bisection(G, partition_a, partition_b, partitions_vertices):
     a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_a], partition_b)
-    a_vertices_helpfulness_copy = a_vertices_helpfulness.copy()
     cut_size = count_cut_size(G, partitions_vertices, partition_a, partition_b)
-    limit = cut_size / 4
+    limit = cut_size / 2
 
-    while limit > 0:
+    while limit > 1:
         S, S_helpfulness = search_for_helpful_set(G, a_vertices_helpfulness, limit)
         if limit > S_helpfulness > 0:
             limit = S_helpfulness
@@ -29,5 +28,5 @@ def improve_bisection(G, partition_a, partition_b, partitions_vertices, draw):
                 limit *= 2
             else:
                 move_set_to_another_partition(G, partition_b, partition_a, partitions_vertices, S)
-                a_vertices_helpfulness = a_vertices_helpfulness_copy
+                a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_a], partition_b)
                 limit /= 2

@@ -1,5 +1,7 @@
 import operator
 
+import networkx
+
 from src.graph_utils.helpful_sets.helpers import update_helpfulness_of_neighbours, sort_vertices_helpfulness, \
     add_vertex_and_update_sets, pop_vertex_b_s, pop_vertex
 
@@ -22,7 +24,7 @@ def contains_proper_diff_values(vertices_helpfulness, k_prime, S_dash_helpfulnes
 
 
 def _init_2_set():
-    return set(), 0
+    return [], 0
 
 
 def contains_diff_values_greater_than_0(vertices_helpfulness):
@@ -37,11 +39,10 @@ def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness):
     success = False
 
     S_dash, S_dash_helpfulness = phase_1(G, vertices_helpfulness, S_size, S_helpfulness)
+    S_dash, S_dash_helpfulness = phase_2(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
+                                         S_helpfulness)
 
-    phase_2(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
-            S_helpfulness)
-
-    if S_dash_helpfulness <= S_helpfulness - 1:
+    if S_dash_helpfulness <= S_helpfulness - 1 and len(S_dash) == S_size:
         success = True
     return S_dash, S_dash_helpfulness, success
 
@@ -69,7 +70,7 @@ def phase_1(G, vertices_helpfulness, S_size, S_helpfulness):
 
 
 def add_set_to_2_coll(_2_set, _2_set_helpfulness, _2_coll):
-    obj = {'set': _2_set, 'helpfulness': _2_set_helpfulness}
+    obj = {'list': _2_set, 'helpfulness': _2_set_helpfulness}
     _2_coll.append(obj)
 
 
@@ -78,8 +79,53 @@ def sort_2_coll_on_helpfulness(_2_coll):
 
 
 def pop_2_set(_2_coll):
-    _2_set = _2_coll.pop()
-    return _2_set['set'], _2_set['helpfulness']
+    obj = _2_coll.pop()
+    return obj['list'], obj['helpfulness']
+
+
+def create_set_from_list(_2_set):
+    _set = set()
+    for vertex in _2_set:
+        _set.add(vertex['v_num'])
+    return _set
+
+
+def add_2_set_to_S_dash(_2_set, S_dash):
+    _set = create_set_from_list(_2_set)
+    S_dash |= _set
+
+
+def get_vertices_to_update_helpfulness(G, _2_set):
+    vertices_set = create_set_from_list(_2_set)
+    vertices_to_update = set()
+    for v_num in vertices_set:
+        vertices_to_update |= set(networkx.all_neighbors(G, v_num))
+
+    return vertices_to_update
+
+
+def update_helpfulness_of_2_coll(G, _2_set, _2_coll):
+    to_update = get_vertices_to_update_helpfulness(G, _2_set)
+    for _set in _2_coll:
+        count = 0
+        for vertex in _set['list']:
+            if vertex['v_num'] in to_update:
+                vertex['helpfulness'] += 2
+                count += 2
+        _set['helpfulness'] += count
+    sort_2_coll_on_helpfulness(_2_coll)
+
+
+def update_helpfulness_of_big_set(G, _2_set, big_set):
+    to_update = get_vertices_to_update_helpfulness(G, _2_set)
+    for vertex in big_set:
+        if vertex['v_num'] in to_update:
+            vertex['helpfulness'] -= 2
+
+
+def reduce_S_prim(S_prim, number_of_elements_to_pop):
+    while len(S_prim) > 0 and len(S_prim) > number_of_elements_to_pop:
+        S_prim.pop()
 
 
 def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
@@ -89,7 +135,6 @@ def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
            and contains_proper_diff_values(big_set, S_helpfulness, S_dash_helpfulness)):
         vertices_to_consider = filter_diff_values(big_set, S_helpfulness, S_dash_helpfulness)
 
-        big_set_copy = big_set.copy()
         v_num, v_helpfulness = pop_vertex_b_s(vertices_to_consider, big_set)
         _2_set, _2_set_helpfulness = _init_2_set()
         _2_set_helpfulness = add_vertex_and_update_sets(G=G,
@@ -111,18 +156,20 @@ def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
                                                             big_set=big_set)
 
         if _2_set_helpfulness >= 0:
-            S_dash |= _2_set
+            add_2_set_to_S_dash(_2_set, S_dash)
+            update_helpfulness_of_2_coll(G, _2_set, _2_coll)
             while len(S_dash) < S_size and _contains_sets_with_H_greater_or_equal_than_0(_2_coll):
                 S_prim, S_prim_helpfulness = pop_2_set(_2_coll)
                 if len(S_prim) + len(S_dash) < S_size:
-                    S_dash |= S_prim
+                    add_2_set_to_S_dash(S_prim, S_dash)
                 else:
-                    pass
+                    reduce_S_prim(S_prim, S_size - len(S_dash))
+                    add_2_set_to_S_dash(S_prim, S_dash)
         elif len(_2_set) + len(S_dash) == S_size:
-            # update diff values for vertices which are in _2_coll
-            S_dash |= _2_set
+            add_2_set_to_S_dash(_2_set, S_dash)
+            update_helpfulness_of_2_coll(G, _2_set, _2_coll)
         else:
-            big_set = big_set_copy
+            update_helpfulness_of_big_set(G, _2_set, big_set)
             add_set_to_2_coll(_2_set, _2_set_helpfulness, _2_coll)
             sort_2_coll_on_helpfulness(_2_coll)
 

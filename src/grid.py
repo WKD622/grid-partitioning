@@ -11,18 +11,21 @@ from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduc
 from src.graph_utils.restoration import restore_area as restore_area_helper
 from src.grid_to_image.draw import optimized_convert_graph_to_image_2, convert_partitioned_graph_to_image
 from src.image_to_graph.conversion import convert_image_to_graph
+from src.parse_partitioning.parse_partitioning import parse_partitioning
 from src.utils import get_project_root, print_infos
 
 
 class Grid:
 
     def __init__(self, grid_name):
-        start = time.time()
-        G, areas, grid_size = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name)
-        self.conversion_time = time.time() - start
-        self.grid_size = grid_size
-        self.G = G
-        self.areas = areas
+        if grid_name:
+            start = time.time()
+            G, areas, grid_size = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name)
+            self.conversion_time = time.time() - start
+            self.grid_size = grid_size
+            self.G = G
+            self.areas = areas
+            self.last_number_of_partitions = G.number_of_nodes()
         self.reductions = []
         self.drawing_initial_grid_time = None
         self.full_restoration_time = None
@@ -31,9 +34,15 @@ class Grid:
         self.drawing_graph_time = None
         self.drawing_partitioned_grid_time = None
         self.partitions_stats = {}
-        self.last_number_of_partitions = G.number_of_nodes()
         self.partitions_vertices = None
         self.adjacent_partitions = None
+
+    def parse_ready_partitioning(self, partitioning_name):
+        G, grid_size, partitions_vertices = parse_partitioning(str(get_project_root()) + '/partitionings/' + partitioning_name)
+        self.G = G
+        self.last_number_of_partitions = 2
+        self.adjacent_partitions = {1: [2], 2: [1]}
+        self.partitions_vertices = partitions_vertices
 
     def reduce(self, vertices_to_reduce):
         new_vertex_name = reduce_vertices_helper(self.G, vertices_to_reduce, NORMAL_AREA)
@@ -162,10 +171,12 @@ class Grid:
 
         return count_cut_size(self.G, self.partitions_vertices[partition_number], partition_number)
 
+    @print_infos
     def improve_partitioning(self):
+        # adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
         for partition, neighbours in self.adjacent_partitions.items():
             for vertex in neighbours:
-                improve_bisection(self.G, vertex, partition, self.partitions_vertices, self.draw_partitioned_grid)
+                improve_bisection(self.G, vertex, partition, self.partitions_vertices)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
