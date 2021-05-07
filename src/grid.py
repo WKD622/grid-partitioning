@@ -38,7 +38,8 @@ class Grid:
         self.adjacent_partitions = None
 
     def parse_ready_partitioning(self, partitioning_name):
-        G, grid_size, partitions_vertices = parse_partitioning(str(get_project_root()) + '/partitionings/' + partitioning_name)
+        G, grid_size, partitions_vertices = parse_partitioning(
+            str(get_project_root()) + '/partitionings/' + partitioning_name)
         self.G = G
         self.last_number_of_partitions = 2
         self.adjacent_partitions = {1: [2], 2: [1]}
@@ -101,8 +102,25 @@ class Grid:
             graph_size = graph_size / 2
         return i
 
+    def draw_partitioning_step(self):
+        partition_number = 0
+        G_copy = self.G.copy()
+
+        for node in G_copy.nodes:
+            G_copy.nodes[node]['data']['partition'] = partition_number
+            partition_number += 1
+
+        last_number_of_partitions = G_copy.number_of_nodes()
+
+        reductions_copy = self.reductions.copy()
+        while len(reductions_copy) > 0:
+            if len(reductions_copy) > 0:
+                restore_area_helper(G_copy, reductions_copy.pop())
+
+        convert_partitioned_graph_to_image(G_copy, 1, 80, last_number_of_partitions, 'name')
+
     @print_infos
-    def reduce_by_lam(self, number_of_partitions):
+    def reduce_by_lam(self, number_of_partitions, draw_steps=False):
         general_start = time.time()
         i = 1
         T = self.calculate_maximal_number_of_episodes(number_of_partitions)
@@ -111,6 +129,9 @@ class Grid:
             for match in lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size):
                 self.reduce(match)
                 self.last_number_of_partitions = self.G.number_of_nodes()
+            if draw_steps:
+                self.draw_partitioning_step()
+
             print('{}) reduce: {:<3} s | nodes: {}'.format(i, round(time.time() - start, 2), self.G.number_of_nodes()))
             i += 1
         self.lam_reduction_time = time.time() - general_start
