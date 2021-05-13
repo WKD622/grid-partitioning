@@ -117,7 +117,7 @@ class Grid:
             if len(reductions_copy) > 0:
                 restore_area_helper(G_copy, reductions_copy.pop())
 
-        convert_partitioned_graph_to_image(G_copy, 1, 80, last_number_of_partitions, 'name')
+        convert_partitioned_graph_to_image(G_copy, 1, 70, last_number_of_partitions, 'name')
 
     @print_infos
     def reduce_by_lam(self, number_of_partitions, draw_steps=False):

@@ -1,4 +1,3 @@
-import math
 import random
 
 from src.utils import print_infos
@@ -22,7 +21,8 @@ def get_unchecked_edges(G, U, v):
 
 
 def get_adj_unchecked_vertex(G, U, v):
-    (k, l) = get_unchecked_edges(G, U, v).pop()
+    unchecked_edges = get_unchecked_edges(G, U, v)
+    (k, l) = list(unchecked_edges)[random.randint(0, len(unchecked_edges) - 1)]
     if k == v:
         return l
     return k
@@ -131,34 +131,51 @@ def finish(M, G, number_of_partitions):
     return (G.number_of_nodes() - len(M) / 2) == number_of_partitions
 
 
-def can_be_matched(G, a, b, h_weight, s_weight, T, t, number_of_partitions, grid_size):
+def can_be_matched(G, a, b, weights, T, t, number_of_partitions, grid_size):
+    h_weight = weights['h_weight']
+    s_weight = weights['s_weight']
     sum_weight_of_nodes = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
-    discount = ((t + (grid_size ** (1 / 2))) / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions)))
-    return sum_weight_of_nodes <= discount * (h_weight + s_weight)
+    # discount = (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions)))
+    # if discount > 1:
+    #     discount = 1
+    return sum_weight_of_nodes <= h_weight + 2 * s_weight
 
 
-def try_match(G, a, b, U, M, h_weight, s_weight, T, t, number_of_partitions, grid_size):
+def get_smallest_weight(nodes):
+    def get_weight(node):
+        return node[1]['data']['weight']
+
+    return sorted(nodes, key=get_weight)[0][1]['data']['weight']
+
+
+def update_weights(G, a, b, weights):
+    if G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight'] > weights['h_weight']:
+        weights['h_weight'] = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
+    weights['s_weight'] = get_smallest_weight(G.nodes.data())
+
+
+def try_match(G, a, b, U, M, weights, T, t, number_of_partitions, grid_size):
     C_a = set()
     C_b = set()
     while is_free(M, a) and is_free(M, b) and (
             there_are_unchecked_edges(G, U, a) or there_are_unchecked_edges(G, U, b)):
+
         if is_free(M, a) and there_are_unchecked_edges(G, U, a):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(U, C_a, a, c)
             if get_weight(G, a, c) > get_weight(G, a, b):
-                try_match(G, a, c, U, M, h_weight, s_weight, T, t, number_of_partitions, grid_size)
+                try_match(G, a, c, U, M, weights, T, t, number_of_partitions, grid_size)
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(U, C_b, b, d)
             if get_weight(G, b, d) > get_weight(G, a, b):
-                try_match(G, b, d, U, M, h_weight, s_weight, T, t, number_of_partitions, grid_size)
-    is_free_a = is_free(M, a)
-    is_free_b = is_free(M, b)
-    if is_free_a and is_free_b and can_be_matched(G, a, b, h_weight, s_weight, T, t, number_of_partitions, grid_size):
+                try_match(G, b, d, U, M, weights, T, t, number_of_partitions, grid_size)
+    if is_free(M, a) and is_free(M, b) and can_be_matched(G, a, b, weights, T, t, number_of_partitions, grid_size):
         match(M, a, b)
-    elif is_matched(M, a) and is_free_b:
+        update_weights(G, a, b, weights)
+    elif is_matched(M, a) and is_free(M, b):
         restore_all_free_edges(U, M, C_b, b)
-    elif is_matched(M, b) and is_free_a:
+    elif is_matched(M, b) and is_free(M, a):
         restore_all_free_edges(U, M, C_a, a)
 
 
@@ -167,11 +184,12 @@ def lam_algorithm(G, number_of_partitions, T, t, grid_size):
     M = {}
     U = set(G.edges)
     h_weight, s_weight = get_smallest_and_highest_weights(G)
+    weights = {'h_weight': h_weight, 's_weight': s_weight}
 
     while len(U) != 0:
         print_progress(U, G)
         a, b = draw_an_edge(U)
-        try_match(G, a, b, U, M, h_weight, s_weight, T, t, number_of_partitions, grid_size)
+        try_match(G, a, b, U, M, weights, T, t, number_of_partitions, grid_size)
         if finish(M, G, number_of_partitions):
             break
 
