@@ -61,7 +61,7 @@ def edge_ab_in_set(S, a, b):
     return (a, b) in S or (b, a) in S
 
 
-def get_weight(G, a, b):
+def get_edge_weight(G, a, b):
     """
     Returns weight of an edge (a, b).
     """
@@ -175,13 +175,13 @@ def try_match(G, a, b, U, M, weights):
         if is_free(M, a) and there_are_unchecked_edges(G, U, a):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(from_=U, to_=C_a, a=a, b=c)
-            if get_weight(G, a, c) > get_weight(G, a, b):
+            if get_edge_weight(G, a, c) > get_edge_weight(G, a, b):
                 try_match(G, a, c, U, M, weights)
 
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(from_=U, to_=C_b, a=b, b=d)
-            if get_weight(G, b, d) > get_weight(G, a, b):
+            if get_edge_weight(G, b, d) > get_edge_weight(G, a, b):
                 try_match(G, b, d, U, M, weights)
 
     if is_free(M, a) and is_free(M, b) and can_be_matched(G, a, b, weights):
