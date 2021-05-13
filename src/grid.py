@@ -6,7 +6,7 @@ import networkx as nx
 from src.definitions import NORMAL_AREA
 from src.graph_utils.helpful_sets.algorithm import improve_bisection
 from src.graph_utils.helpful_sets.helpers import count_cut_size, get_partitions_vertices, get_adjacent_partitions
-from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
+from src.graph_utils.lam_algorithm import lam_algorithm
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
 from src.grid_to_image.draw import optimized_convert_graph_to_image_2, convert_partitioned_graph_to_image
@@ -123,10 +123,9 @@ class Grid:
     def reduce_by_lam(self, number_of_partitions, draw_steps=False):
         general_start = time.time()
         i = 1
-        T = self.calculate_maximal_number_of_episodes(number_of_partitions)
         while self.G.number_of_nodes() > number_of_partitions:
             start = time.time()
-            for match in lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size):
+            for match in lam_algorithm(self.G, number_of_partitions):
                 self.reduce(match)
                 self.last_number_of_partitions = self.G.number_of_nodes()
             if draw_steps:
@@ -179,11 +178,6 @@ class Grid:
 
     def get_edge_with_highest_weight(self):
         return sorted(self.G.edges.data('w'), key=lambda x: x[2])[len(self.G.edges) - 1]
-
-    def greedy_matching(self):
-        start = time.time()
-        greedy_matching_helper(self)
-        print('greedy matching time: {} s'.format(round(time.time() - start, 6)))
 
     def get_cut_size(self, partition_number):
         if not self.partitions_vertices:
