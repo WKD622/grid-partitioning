@@ -136,8 +136,8 @@ def print_progress(U, G):
 
 def finish(M, G, number_of_partitions):
     """
-    The condition to check whether lam_algorithm can be finished - because we have enough matchings to reduce our graph
-    to expected size.
+    The condition to check whether lam_algorithm can be finished - because we may have enough matchings to reduce
+    our graph to expected size.
     """
     return (G.number_of_nodes() - len(M) / 2) == number_of_partitions
 
