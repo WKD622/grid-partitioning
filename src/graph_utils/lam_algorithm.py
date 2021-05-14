@@ -36,7 +36,7 @@ def get_adj_unchecked_vertex(G, U, v):
     Returns one, random, unchecked, adjacent vertex to vertex v.
     """
     unchecked_edges = get_unchecked_edges(G, U, v)
-    (k, l) = list(unchecked_edges)[random.randint(0, len(unchecked_edges) - 1)]
+    (k, l) = draw_an_edge(unchecked_edges)
     if k == v:
         return l
     return k
