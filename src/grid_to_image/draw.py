@@ -1,12 +1,14 @@
 import random
 
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
 
 from src.definitions import NORMAL_AREA, INDIVISIBLE_AREA, OFF_AREA, colors_for_partitions
 from src.grid_to_image.helpers import get_color
 
 
 def plot(X, y, colors, s, G, name, save=False):
+    figure(figsize=(4, 4))
     for i in range(len(X)):
         plt.scatter(X[i], y[i], color=colors[i], marker="s", s=s)
     plt.gca().invert_yaxis()
@@ -71,7 +73,7 @@ def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, name, save
     X = []
     y = []
     colors = []
-    if number_of_partitions > 10:
+    if number_of_partitions > len(colors_for_partitions):
         partitions_colors = draw_partitions_colors(len(G.nodes))
     else:
         partitions_colors = colors_for_partitions

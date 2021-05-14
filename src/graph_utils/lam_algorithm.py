@@ -122,8 +122,8 @@ def convert_matched_for_return(M):
     return M_out
 
 
-def print_progress(U, G):
-    if len(U) % 1000 == 0:
+def print_progress(U, G, show):
+    if show and len(U) % 1000 == 0:
         print("lam progress: " + str(round((1 - len(U) / int(G.number_of_edges())) * 100)) + "%")
 
 
@@ -180,14 +180,14 @@ def try_match(G, a, b, U, M, weights, T, t, number_of_partitions, grid_size):
 
 
 @print_infos
-def lam_algorithm(G, number_of_partitions, T, t, grid_size):
+def lam_algorithm(G, number_of_partitions, T, t, grid_size, show_progress):
     M = {}
     U = set(G.edges)
     h_weight, s_weight = get_smallest_and_highest_weights(G)
     weights = {'h_weight': h_weight, 's_weight': s_weight}
 
     while len(U) != 0:
-        print_progress(U, G)
+        print_progress(U, G, show_progress)
         a, b = draw_an_edge(U)
         try_match(G, a, b, U, M, weights, T, t, number_of_partitions, grid_size)
         if finish(M, G, number_of_partitions):

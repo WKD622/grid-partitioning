@@ -17,10 +17,12 @@ from src.utils import get_project_root, print_infos
 
 class Grid:
 
-    def __init__(self, grid_name):
+    def __init__(self, grid_name, show_progress=True):
+        self.show_progress = show_progress
         if grid_name:
             start = time.time()
-            G, areas, grid_size = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name)
+            G, areas, grid_size = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name,
+                                                         self.show_progress)
             self.conversion_time = time.time() - start
             self.grid_size = grid_size
             self.G = G
@@ -126,13 +128,15 @@ class Grid:
         T = self.calculate_maximal_number_of_episodes(number_of_partitions)
         while self.G.number_of_nodes() > number_of_partitions:
             start = time.time()
-            for match in lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size):
+            for match in lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size, self.show_progress):
                 self.reduce(match)
                 self.last_number_of_partitions = self.G.number_of_nodes()
             if draw_steps:
                 self.draw_partitioning_step()
 
-            print('{}) reduce: {:<3} s | nodes: {}'.format(i, round(time.time() - start, 2), self.G.number_of_nodes()))
+            if self.show_progress:
+                print('{}) reduce: {:<3} s | nodes: {}'.format(i, round(time.time() - start, 2),
+                                                               self.G.number_of_nodes()))
             i += 1
         self.lam_reduction_time = time.time() - general_start
 
@@ -227,3 +231,18 @@ class Grid:
             print('partition: {:>3} | proportional size: {:>3}% | size:  {}'.format(partition_number, round(
                 data['proportional_size'] * 100), data['partition_size']))
         print('-----------------------------------------------------------------')
+
+    def count_diff_between_smallest_and_biggest_partition(self):
+        if not len(self.partitions_stats):
+            print("No partitions.")
+            return
+
+        smallest = float('inf')
+        biggest = -float('inf')
+        for partition_number, data in self.partitions_stats.items():
+            if data['partition_size'] > biggest:
+                biggest = data['partition_size']
+            if data['partition_size'] < smallest:
+                smallest = data['partition_size']
+
+        return biggest - smallest
