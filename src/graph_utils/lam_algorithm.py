@@ -204,7 +204,7 @@ def lam_algorithm(G, number_of_partitions):
     M - dictionary with matched vertices. If vertex 'a' is matched with vertex 'b' then it looks like this:
         M = {'a': 'b', 'b': 'a'}
 
-    U - set with unmatched edges, at the beginning all edges from a graph are here. Looks like this:
+    U - set with unchecked edges, at the beginning all edges from a graph are here. Looks like this:
         U = {(a, b), (b, c), (f, a)} - edges are represented by tuples. Each element of a tuple represents vertex.
 
     h_weight, s_weight - highest and smallest weight of a vertex in a graph. Edges also have weights and they are used
