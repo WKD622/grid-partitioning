@@ -102,16 +102,13 @@ def restore_all_free_edges(U, M, C, v):
 
 
 def get_smallest_and_highest_weights(G):
+    """
+    Returns highest and smallest weights among all vertices in a graph.
+    """
     weights = sorted(G.nodes.data(), key=lambda k: k[1]['data']['weight'])
     highest_weight = weights[-1][1]['data']['weight']
     smallest_weight = weights[0][1]['data']['weight']
     return highest_weight, smallest_weight
-
-
-def remove_adj_edges(G, U, v):
-    for x in get_unchecked_edges(G, U, v):
-        k, l = x
-        remove_edge_from_set(U, k, l)
 
 
 def draw_an_edge(edges):
@@ -165,6 +162,12 @@ def update_highest_weight(G, a, b, weights):
 
 
 def try_match(G, a, b, U, M, weights):
+    """
+    The most important, recursive part of the algorithm. Difference between my algorithm and the one from the paper is
+    that I don't have R set (set of edges that have to be removed after matching). This set is useless for me in
+    the context of reducing a graph because I need to keep those edges, not remove them. That is also why number of
+    if conditions at the end of this method is simplified from 4 to 3.
+    """
     C_a = set()
     C_b = set()
 
@@ -196,16 +199,38 @@ def try_match(G, a, b, U, M, weights):
 @print_infos
 def lam_algorithm(G, number_of_partitions):
     """
-    Vertices in graph are represent by numbers.
+    Vertices in graph are represented by numbers.
 
     M - dictionary with matched vertices. If vertex 'a' is matched with vertex 'b' then it looks like this:
         M = {'a': 'b', 'b': 'a'}
 
-    U - set with unmatched edges, at the beginning all edges from graph are here. Looks like this:
+    U - set with unmatched edges, at the beginning all edges from a graph are here. Looks like this:
         U = {(a, b), (b, c), (f, a)} - edges are represented by tuples. Each element of a tuple represents vertex.
 
     h_weight, s_weight - highest and smallest weight of a vertex in a graph. Edges also have weights and they are used
     by this algorithm, in other places though.
+
+    Weight of a vertex represents how many vertices have been replaced through previous processes of matching.
+
+    Weight of an edge represents how many edges have been replaced by this particular edge through previous processes of
+    matching.
+
+    Example of changing weights of vertices and edges (this is not part of this particular algorithm, although this
+    algorithm creates pairs of vertices to be matched and computes those pairs based on weights of edges and vertices
+    which are later updated like in the example below):
+
+        We have edges: [(1, 2), (1, 3)]
+        weight of the edge (1, 2) = 1
+        weight of the edge (1, 3) = 1
+        weight of all vertices is 1.
+        Vertices 2 and 3 were chosen to be matched by lam algorithm. New vertex 4 is created to replace them.
+
+        As a result our edges look like this:
+        [(1, 4)]
+        Edge (1, 4) has a weight = 1 + 1 = 2
+        because it replaced two edges (1, 2) and (1, 3)
+        Vertex 4 has weight = 1 + 1 = 2
+        because it replaced vertices 2 and 3
     """
     M = {}
     U = set(G.edges)
