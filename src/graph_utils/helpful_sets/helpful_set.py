@@ -18,3 +18,18 @@ def search_for_helpful_set(G, vertices_helpfulness, limit):
     return helpful_set, set_helpfulness
 
 
+def search_for_helpful_set_improved(G, vertices_helpfulness, limit, min_helpfulness, s_max):
+    helpful_set = set()
+    set_helpfulness = 0
+    end = False
+    while not end and set_helpfulness < limit and 0 < len(vertices_helpfulness) < s_max:
+        vertex_num, vertex_helpfulness = pop_vertex(vertices_helpfulness)
+        if vertex_helpfulness + set_helpfulness < min_helpfulness:
+            end = True
+        else:
+            set_helpfulness += vertex_helpfulness
+            helpful_set.add(vertex_num)
+            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness)
+            sort_vertices_helpfulness(vertices_helpfulness)
+
+    return helpful_set, set_helpfulness

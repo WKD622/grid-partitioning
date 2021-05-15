@@ -47,7 +47,41 @@ def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness):
     return S_dash, S_dash_helpfulness, success
 
 
+def search_for_balancing_set_improved(G, vertices_helpfulness, S_size, S_helpfulness, min_, max_):
+    success = False
+
+    S_dash, S_dash_helpfulness = phase_1_improved(G, vertices_helpfulness, S_size, S_helpfulness, min_, max_)
+    S_dash, S_dash_helpfulness = phase_2_improved(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
+                                                  S_helpfulness, min_, max_)
+
+    if S_dash_helpfulness <= S_helpfulness - 1 and len(S_dash) == S_size:
+        success = True
+    return S_dash, S_dash_helpfulness, success
+
+
 def phase_1(G, vertices_helpfulness, S_size, S_helpfulness):
+    set_helpfulness = 0
+    helpful_set = set()
+    end = False
+    while (not end
+           and len(helpful_set) < S_size
+           and set_helpfulness < S_helpfulness - 1
+           and len(vertices_helpfulness) > 0):
+        vertex_data = vertices_helpfulness.pop()
+        vertex_helpfulness = vertex_data['helpfulness']
+        vertex_num = vertex_data['v_num']
+        if vertex_helpfulness < 0:
+            end = True
+        else:
+            set_helpfulness += vertex_helpfulness
+            helpful_set.add(vertex_num)
+            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness)
+            sort_vertices_helpfulness(vertices_helpfulness)
+
+    return helpful_set, set_helpfulness
+
+
+def phase_1_improved(G, vertices_helpfulness, S_size, S_helpfulness, min_, max_):
     set_helpfulness = 0
     helpful_set = set()
     end = False
@@ -129,6 +163,54 @@ def reduce_S_prim(S_prim, number_of_elements_to_pop):
 
 
 def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
+    _2_coll = []
+
+    while (len(S_dash) < S_size
+           and contains_proper_diff_values(big_set, S_helpfulness, S_dash_helpfulness)):
+        vertices_to_consider = filter_diff_values(big_set, S_helpfulness, S_dash_helpfulness)
+
+        v_num, v_helpfulness = pop_vertex_b_s(vertices_to_consider, big_set)
+        _2_set, _2_set_helpfulness = _init_2_set()
+        _2_set_helpfulness = add_vertex_and_update_sets(G=G,
+                                                        v_num=v_num,
+                                                        v_helpfulness=v_helpfulness,
+                                                        helpful_set=_2_set,
+                                                        set_helpfulness=_2_set_helpfulness,
+                                                        big_set=big_set)
+
+        while (_2_set_helpfulness < 0
+               and len(_2_set) + len(S_dash) < S_size
+               and contains_diff_values_greater_than_0(big_set)):
+            v_num, v_helpfulness = pop_vertex(big_set)
+            _2_set_helpfulness = add_vertex_and_update_sets(G=G,
+                                                            v_num=v_num,
+                                                            v_helpfulness=v_helpfulness,
+                                                            helpful_set=_2_set,
+                                                            set_helpfulness=_2_set_helpfulness,
+                                                            big_set=big_set)
+
+        if _2_set_helpfulness >= 0:
+            add_2_set_to_S_dash(_2_set, S_dash)
+            update_helpfulness_of_2_coll(G, _2_set, _2_coll)
+            while len(S_dash) < S_size and _contains_sets_with_H_greater_or_equal_than_0(_2_coll):
+                S_prim, S_prim_helpfulness = pop_2_set(_2_coll)
+                if len(S_prim) + len(S_dash) < S_size:
+                    add_2_set_to_S_dash(S_prim, S_dash)
+                else:
+                    reduce_S_prim(S_prim, S_size - len(S_dash))
+                    add_2_set_to_S_dash(S_prim, S_dash)
+        elif len(_2_set) + len(S_dash) == S_size:
+            add_2_set_to_S_dash(_2_set, S_dash)
+            update_helpfulness_of_2_coll(G, _2_set, _2_coll)
+        else:
+            update_helpfulness_of_big_set(G, _2_set, big_set)
+            add_set_to_2_coll(_2_set, _2_set_helpfulness, _2_coll)
+            sort_2_coll_on_helpfulness(_2_coll)
+
+    return S_dash, S_dash_helpfulness
+
+
+def phase_2_improved(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness, min_, max_):
     _2_coll = []
 
     while (len(S_dash) < S_size

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from src.definitions import NORMAL_AREA
-from src.graph_utils.helpful_sets.algorithm import improve_bisection
+from src.graph_utils.helpful_sets.algorithm import improve_bisection, improve_bisection_improved
 from src.graph_utils.helpful_sets.helpers import count_cut_size, get_partitions_vertices, get_adjacent_partitions
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
@@ -197,11 +197,18 @@ class Grid:
         return count_cut_size(self.G, self.partitions_vertices[partition_number], partition_number)
 
     @print_infos
-    def improve_partitioning(self):
+    def improve_partitioning_normal(self):
         # adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
         for partition, neighbours in self.adjacent_partitions.items():
             for vertex in neighbours:
                 improve_bisection(self.G, vertex, partition, self.partitions_vertices)
+
+    @print_infos
+    def improve_partitioning_improved(self):
+        # adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
+        for partition, neighbours in self.adjacent_partitions.items():
+            for vertex in neighbours:
+                improve_bisection_improved(self.G, vertex, partition, self.partitions_vertices)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
