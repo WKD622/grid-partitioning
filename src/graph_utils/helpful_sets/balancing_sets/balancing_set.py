@@ -12,8 +12,8 @@ def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness):
     success = False
 
     S_dash, S_dash_helpfulness = phase_1(G, vertices_helpfulness, S_size, S_helpfulness)
-    # S_dash, S_dash_helpfulness = phase_2(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
-    #                                      S_helpfulness)
+    S_dash, S_dash_helpfulness = phase_2(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
+                                         S_helpfulness)
 
     if S_dash_helpfulness <= S_helpfulness - 1 and len(S_dash) == S_size:
         success = True
