@@ -208,7 +208,8 @@ class Grid:
         # adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
         for partition, neighbours in self.adjacent_partitions.items():
             for vertex in neighbours:
-                improve_bisection_improved(self.G, vertex, partition, self.partitions_vertices)
+                improve_bisection_improved(self.G, vertex, partition, self.partitions_vertices,
+                                           self.draw_partitioned_grid)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')

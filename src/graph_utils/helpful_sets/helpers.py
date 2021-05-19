@@ -137,30 +137,19 @@ def v_int_s(G, node_num, helpful_set):
     return counter
 
 
-def pop_vertex(G, vertices_helpfulness):
+def pop_vertex(vertices_helpfulness):
+    vertex_data = vertices_helpfulness.pop()
+    vertex_helpfulness = vertex_data['helpfulness']
+    vertex_num = vertex_data['v_num']
+    return vertex_num, vertex_helpfulness
+
+
+def pop_vertex_improved(G, vertices_helpfulness):
     vertex_data = vertices_helpfulness.pop()
     vertex_helpfulness = vertex_data['helpfulness']
     vertex_num = vertex_data['v_num']
     vertex_weight = G.nodes[vertex_num]['data']['weight']
     return vertex_num, vertex_helpfulness, vertex_weight
-
-
-def pop_vertex_b_s(G, vertices_helpfulness, big_set):
-    vertex_data = vertices_helpfulness.pop()
-    vertex_helpfulness = vertex_data['helpfulness']
-    vertex_num = vertex_data['v_num']
-    vertex_weight = G.nodes[vertex_num]['data']['weight']
-    big_set.remove(vertex_data)
-    return vertex_num, vertex_helpfulness, vertex_weight
-
-
-def add_vertex_and_update_sets(G, v_num, v_helpfulness, v_weight, helpful_set, set_helpfulness, set_weight, big_set):
-    helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
-    set_helpfulness += v_helpfulness
-    set_weight += v_weight
-    update_helpfulness_of_neighbours(G, v_num, big_set)
-    sort_vertices_helpfulness(big_set)
-    return set_helpfulness, set_weight
 
 
 def swap_partitions(v_h_1, l_1, p_1, v_h_2, l_2, p_2):
@@ -170,25 +159,3 @@ def swap_partitions(v_h_1, l_1, p_1, v_h_2, l_2, p_2):
 def undo_S_build(G, current_partition, dest_partition, partitions_vertices, vertices_set):
     if vertices_set:
         move_set(G, current_partition, dest_partition, partitions_vertices, vertices_set)
-
-
-def determine_partition_weight(G, partition_vertices):
-    partition_weight = 0
-    min_partition_weight = float("inf")
-    max_partition_weight = -float("inf")
-    for v_num in partition_vertices:
-        v_weight = G.nodes[v_num]['data']['weight']
-        partition_weight += v_weight
-        if v_weight < min_partition_weight:
-            min_partition_weight = v_weight
-        if v_weight > max_partition_weight:
-            max_partition_weight = v_weight
-    grace = max_partition_weight / 2
-    return partition_weight, max_partition_weight, min_partition_weight, grace
-
-
-def determine_max_and_min_weight_for_balancing_set(G, partition_vertices):
-    partition_weight, max_weight, min_weight, grace = determine_partition_weight(G, partition_vertices)
-    min_ = abs(partition_weight - max_weight - grace)
-    max_ = abs(partition_weight - min_weight + grace)
-    return min_, max_

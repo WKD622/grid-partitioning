@@ -27,6 +27,7 @@ def search_for_helpful_set(G, vertices_helpfulness, limit):
 
 def search_for_helpful_set_improved(G, vertices_helpfulness, limit, min_helpfulness, s_max):
     helpful_set = set()
+    set_weight = 0
     set_helpfulness = 0
     end = False
     while not end and set_helpfulness < limit and len(vertices_helpfulness) > 0 and len(helpful_set) < s_max:
@@ -35,8 +36,9 @@ def search_for_helpful_set_improved(G, vertices_helpfulness, limit, min_helpfuln
             end = True
         else:
             set_helpfulness += vertex_helpfulness
+            set_weight += G.nodes[vertex_num]['data']['weight']
             helpful_set.add(vertex_num)
             update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness)
             sort_vertices_helpfulness(vertices_helpfulness)
 
-    return helpful_set, set_helpfulness
+    return helpful_set, set_helpfulness, set_weight
