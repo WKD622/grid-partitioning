@@ -1,4 +1,11 @@
-from src.graph_utils.helpful_sets.helpers import update_helpfulness_of_neighbours, sort_vertices_helpfulness, pop_vertex
+from src.graph_utils.helpful_sets.helpers import update_helpfulness_of_neighbours, sort_vertices_helpfulness
+
+
+def pop_vertex(vertices_helpfulness):
+    vertex_data = vertices_helpfulness.pop()
+    vertex_helpfulness = vertex_data['helpfulness']
+    vertex_num = vertex_data['v_num']
+    return vertex_num, vertex_helpfulness
 
 
 def search_for_helpful_set(G, vertices_helpfulness, limit):
@@ -22,9 +29,9 @@ def search_for_helpful_set_improved(G, vertices_helpfulness, limit, min_helpfuln
     helpful_set = set()
     set_helpfulness = 0
     end = False
-    while not end and set_helpfulness < limit and 0 < len(vertices_helpfulness) < s_max:
+    while not end and set_helpfulness < limit and len(vertices_helpfulness) > 0 and len(helpful_set) < s_max:
         vertex_num, vertex_helpfulness = pop_vertex(vertices_helpfulness)
-        if vertex_helpfulness + set_helpfulness < min_helpfulness:
+        if set_helpfulness + vertex_helpfulness < min_helpfulness:
             end = True
         else:
             set_helpfulness += vertex_helpfulness

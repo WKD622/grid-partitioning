@@ -3,8 +3,8 @@ import operator
 from src.definitions import INDIVISIBLE_AREA
 
 
-def move_set_to_another_partition(G, current_partition, dest_partition, partitions_vertices, vertices_set):
-    for vertex_num in vertices_set:
+def move_set(G, current_partition, dest_partition, partitions_vertices, to_be_moved):
+    for vertex_num in to_be_moved:
         partitions_vertices[current_partition].remove(vertex_num)
         partitions_vertices[dest_partition].add(vertex_num)
         G.nodes[vertex_num]['data']['partition'] = dest_partition
@@ -137,27 +137,30 @@ def v_int_s(G, node_num, helpful_set):
     return counter
 
 
-def pop_vertex(vertices_helpfulness):
+def pop_vertex(G, vertices_helpfulness):
     vertex_data = vertices_helpfulness.pop()
     vertex_helpfulness = vertex_data['helpfulness']
     vertex_num = vertex_data['v_num']
-    return vertex_num, vertex_helpfulness
+    vertex_weight = G.nodes[vertex_num]['data']['weight']
+    return vertex_num, vertex_helpfulness, vertex_weight
 
 
-def pop_vertex_b_s(vertices_helpfulness, big_set):
+def pop_vertex_b_s(G, vertices_helpfulness, big_set):
     vertex_data = vertices_helpfulness.pop()
     vertex_helpfulness = vertex_data['helpfulness']
     vertex_num = vertex_data['v_num']
+    vertex_weight = G.nodes[vertex_num]['data']['weight']
     big_set.remove(vertex_data)
-    return vertex_num, vertex_helpfulness
+    return vertex_num, vertex_helpfulness, vertex_weight
 
 
-def add_vertex_and_update_sets(G, v_num, v_helpfulness, helpful_set, set_helpfulness, big_set):
+def add_vertex_and_update_sets(G, v_num, v_helpfulness, v_weight, helpful_set, set_helpfulness, set_weight, big_set):
     helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
     set_helpfulness += v_helpfulness
+    set_weight += v_weight
     update_helpfulness_of_neighbours(G, v_num, big_set)
     sort_vertices_helpfulness(big_set)
-    return set_helpfulness
+    return set_helpfulness, set_weight
 
 
 def swap_partitions(v_h_1, l_1, p_1, v_h_2, l_2, p_2):
@@ -166,7 +169,7 @@ def swap_partitions(v_h_1, l_1, p_1, v_h_2, l_2, p_2):
 
 def undo_S_build(G, current_partition, dest_partition, partitions_vertices, vertices_set):
     if vertices_set:
-        move_set_to_another_partition(G, current_partition, dest_partition, partitions_vertices, vertices_set)
+        move_set(G, current_partition, dest_partition, partitions_vertices, vertices_set)
 
 
 def determine_partition_weight(G, partition_vertices):
