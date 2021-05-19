@@ -80,8 +80,11 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
 
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a)
         min_, max_ = determine_max_and_min_weight_for_balancing_set(G, S_a_weight, partitions_vertices[partition_b])
-        S_b, S_b_helpfulness, success = search_for_balancing_set_improved(G, b_vertices_helpfulness,
-                                                                          S_a_helpfulness, min_, max_)
+        S_b, S_b_helpfulness, success = search_for_balancing_set_improved(G=G,
+                                                                          vertices_helpfulness=b_vertices_helpfulness,
+                                                                          min_=min_,
+                                                                          max_=max_,
+                                                                          S_helpfulness=S_a_helpfulness)
 
         if success and S_b_helpfulness > -S_a_helpfulness:
             move_set(G, current_partition=partition_b, dest_partition=partition_a,

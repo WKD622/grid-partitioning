@@ -3,7 +3,6 @@ from src.graph_utils.helpful_sets.balancing_sets.helpers import (contains_proper
                                                                  update_helpfulness_of_2_coll,
                                                                  _contains_sets_with_H_greater_or_equal_than_0,
                                                                  update_helpfulness_of_big_set,
-                                                                 add_vertex_and_update_sets,
                                                                  sort_2_coll_on_helpfulness, create_set_from_list)
 from src.graph_utils.helpful_sets.helpers import (update_helpfulness_of_neighbours, sort_vertices_helpfulness,
                                                   pop_vertex_improved)
@@ -12,10 +11,17 @@ from src.graph_utils.helpful_sets.helpers import (update_helpfulness_of_neighbou
 def search_for_balancing_set_improved(G, vertices_helpfulness, S_helpfulness, min_, max_):
     success = False
 
-    S_dash, S_dash_helpfulness, S_dash_weight = phase_1_improved(G, vertices_helpfulness, S_helpfulness, max_)
-    # S_dash, S_dash_helpfulness, S_dash_weight = phase_2_improved(G, S_dash, S_dash_helpfulness, S_dash_weight,
-    #                                                              vertices_helpfulness,
-    #                                                              S_helpfulness, max_)
+    S_dash, S_dash_helpfulness, S_dash_weight = phase_1_improved(G=G,
+                                                                 vertices_helpfulness=vertices_helpfulness,
+                                                                 S_helpfulness=S_helpfulness,
+                                                                 max_=max_)
+    S_dash, S_dash_helpfulness, S_dash_weight = phase_2_improved(G=G,
+                                                                 S_dash=S_dash,
+                                                                 S_dash_helpfulness=S_dash_helpfulness,
+                                                                 S_dash_weight=S_dash_weight,
+                                                                 big_set=vertices_helpfulness,
+                                                                 S_helpfulness=S_helpfulness,
+                                                                 max_=max_)
 
     if S_dash_helpfulness <= S_helpfulness - 1 and min_ <= S_dash_weight <= max_:
         success = True
@@ -137,3 +143,12 @@ def pop_vertex_b_s(G, vertices_helpfulness, big_set):
     vertex_weight = G.nodes[vertex_num]['data']['weight']
     big_set.remove(vertex_data)
     return vertex_num, vertex_helpfulness, vertex_weight
+
+
+def add_vertex_and_update_sets(G, v_num, v_helpfulness, v_weight, helpful_set, set_helpfulness, set_weight, big_set):
+    helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
+    set_helpfulness += v_helpfulness
+    set_weight += v_weight
+    update_helpfulness_of_neighbours(G, v_num, big_set)
+    sort_vertices_helpfulness(big_set)
+    return set_helpfulness, set_weight

@@ -3,7 +3,6 @@ from src.graph_utils.helpful_sets.balancing_sets.helpers import (create_set_from
                                                                  update_helpfulness_of_2_coll,
                                                                  _contains_sets_with_H_greater_or_equal_than_0,
                                                                  contains_diff_values_greater_than_0,
-                                                                 add_vertex_and_update_sets,
                                                                  contains_proper_diff_values, filter_diff_values)
 from src.graph_utils.helpful_sets.helpers import (update_helpfulness_of_neighbours, sort_vertices_helpfulness,
                                                   pop_vertex)
@@ -121,3 +120,11 @@ def pop_vertex_b_s(vertices_helpfulness, big_set):
     vertex_num = vertex_data['v_num']
     big_set.remove(vertex_data)
     return vertex_num, vertex_helpfulness
+
+
+def add_vertex_and_update_sets(G, v_num, v_helpfulness, helpful_set, set_helpfulness, big_set):
+    helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
+    set_helpfulness += v_helpfulness
+    update_helpfulness_of_neighbours(G, v_num, big_set)
+    sort_vertices_helpfulness(big_set)
+    return set_helpfulness

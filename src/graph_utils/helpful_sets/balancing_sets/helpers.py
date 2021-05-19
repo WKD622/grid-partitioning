@@ -90,11 +90,3 @@ def filter_diff_values(vertices_helpfulness, S_helpfulness, S_dash_helpfulness):
 def contains_proper_diff_values(vertices_helpfulness, k_prime, S_dash_helpfulness):
     return len(filter_diff_values(vertices_helpfulness, k_prime, S_dash_helpfulness))
 
-
-def add_vertex_and_update_sets(G, v_num, v_helpfulness, v_weight, helpful_set, set_helpfulness, set_weight, big_set):
-    helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
-    set_helpfulness += v_helpfulness
-    set_weight += v_weight
-    update_helpfulness_of_neighbours(G, v_num, big_set)
-    sort_vertices_helpfulness(big_set)
-    return set_helpfulness, set_weight
