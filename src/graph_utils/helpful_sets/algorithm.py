@@ -51,7 +51,7 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
                 swap_partitions(v_h_1=a_vertices_helpfulness, l_1=limit_a, p_1=partition_a,
                                 v_h_2=b_vertices_helpfulness, l_2=limit_b, p_2=partition_b)
 
-        S_a, S_a_helpfulness, S_a_weight = search_for_helpful_set_improved(G, a_vertices_helpfulness, limit_a, 0,
+        S_a, S_a_helpfulness, S_a_weight = search_for_helpful_set_improved(G, a_vertices_helpfulness, limit_a,
                                                                            S_max)
 
         if S_a_helpfulness < limit_a:
@@ -59,7 +59,7 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
             if limit_b > S_a_helpfulness:
 
                 S_b, S_b_helpfulness, S_b_weight = search_for_helpful_set_improved(G, b_vertices_helpfulness, limit_b,
-                                                                                   0, S_max)
+                                                                                   S_max)
                 if S_b_helpfulness >= S_a_helpfulness:
                     a_vertices_helpfulness, limit_a, partition_a, b_vertices_helpfulness, limit_b, partition_b = \
                         swap_partitions(v_h_1=a_vertices_helpfulness, l_1=limit_a, p_1=partition_a,
@@ -117,4 +117,8 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
         a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_a], partition_b)
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a)
 
-    balance_greedily(G, partition_a, partition_b, partitions_vertices)
+    balance_greedily(G=G, p=0.1,
+                     partition_a=partition_a,
+                     partition_b=partition_b,
+                     partitions_vertices=partitions_vertices,
+                     partitions_stats=partitions_stats)

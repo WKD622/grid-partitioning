@@ -25,7 +25,7 @@ def search_for_helpful_set(G, vertices_helpfulness, limit):
     return helpful_set, set_helpfulness
 
 
-def search_for_helpful_set_improved(G, vertices_helpfulness, limit, min_helpfulness, s_max):
+def search_for_helpful_set_improved(G, vertices_helpfulness, limit, s_max):
     helpful_set = set()
     set_weight = 0
     set_helpfulness = 0
