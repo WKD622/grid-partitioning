@@ -1,4 +1,4 @@
-from math import log, ceil
+from math import ceil, log
 
 from src.graph_utils.helpful_sets.balancing_sets.balance_sets_greedily import balance_greedily
 from src.graph_utils.helpful_sets.balancing_sets.balancing_set import search_for_balancing_set
@@ -44,14 +44,14 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
     limit_b = cut_size / 2
     S_max = 128
 
-    while limit_a + limit_b > 2:
+    while limit_a + limit_b > 0.5:
 
         if limit_a == 0 or (2 * limit_a) < limit_b:
             a_vertices_helpfulness, limit_a, partition_a, b_vertices_helpfulness, limit_b, partition_b = \
                 swap_partitions(v_h_1=a_vertices_helpfulness, l_1=limit_a, p_1=partition_a,
                                 v_h_2=b_vertices_helpfulness, l_2=limit_b, p_2=partition_b)
 
-        S_a, S_a_helpfulness, S_a_weight = search_for_helpful_set_improved(G, a_vertices_helpfulness, limit_a, -2,
+        S_a, S_a_helpfulness, S_a_weight = search_for_helpful_set_improved(G, a_vertices_helpfulness, limit_a, 0,
                                                                            S_max)
 
         if S_a_helpfulness < limit_a:
@@ -59,7 +59,7 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
             if limit_b > S_a_helpfulness:
 
                 S_b, S_b_helpfulness, S_b_weight = search_for_helpful_set_improved(G, b_vertices_helpfulness, limit_b,
-                                                                                   -2, S_max)
+                                                                                   0, S_max)
                 if S_b_helpfulness >= S_a_helpfulness:
                     a_vertices_helpfulness, limit_a, partition_a, b_vertices_helpfulness, limit_b, partition_b = \
                         swap_partitions(v_h_1=a_vertices_helpfulness, l_1=limit_a, p_1=partition_a,
@@ -71,20 +71,20 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
                     limit_b = S_b_helpfulness
 
         if S_a_helpfulness < 0 or len(S_a) == 0:
-            limit_a = S_a_helpfulness
+            limit_a = 0
             continue
 
         limit_a = min(limit_a, S_a_helpfulness)
         move_set(G, current_partition=partition_a, dest_partition=partition_b, partitions_vertices=partitions_vertices,
                  to_be_moved=S_a)
-
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a)
         min_, max_ = determine_max_and_min_weight_for_balancing_set(G, S_a_weight, partitions_vertices[partition_b])
         S_b, S_b_helpfulness, success = search_for_balancing_set_improved(G=G,
                                                                           vertices_helpfulness=b_vertices_helpfulness,
                                                                           min_=min_,
                                                                           max_=max_,
-                                                                          S_helpfulness=S_a_helpfulness)
+                                                                          S_helpfulness=S_a_helpfulness,
+                                                                          adjacent_partition=partition_a)
 
         if success and S_b_helpfulness > -S_a_helpfulness:
             move_set(G, current_partition=partition_b, dest_partition=partition_a,

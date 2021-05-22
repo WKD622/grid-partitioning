@@ -103,9 +103,22 @@ def set_vertex_helpfulness(G, v_num, helpfulness):
     G.nodes[v_num]['data']['helpfulness'] = helpfulness
 
 
+def count_adj_vertices(G, v_num, current_partition, adjacent_partition):
+    counter = 0
+    for v in G.adj[v_num]:
+        if (G.nodes[v]['data']['partition'] == current_partition
+                or G.nodes[v]['data']['partition'] == adjacent_partition):
+            counter += 1
+    return counter
+
+
 def count_vertex_helpfulness(G, v_num, adj_part, helpful_set):
     if G.nodes[v_num]['data']['type'] == INDIVISIBLE_AREA:
         return float('-inf')
+    curr_partition = G.nodes[v_num]['data']['partition']
+
+    # print(v_ext(G, v_num, adj_part, helpful_set) - v_int(G, v_num, helpful_set) + v_int_s(G, v_num, helpful_set) - (
+    #         4 - count_adj_vertices(G, v_num, curr_partition, adj_part)))
     return v_ext(G, v_num, adj_part, helpful_set) - v_int(G, v_num, helpful_set) + v_int_s(G, v_num, helpful_set)
 
 

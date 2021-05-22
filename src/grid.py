@@ -5,7 +5,8 @@ import networkx as nx
 
 from src.definitions import NORMAL_AREA
 from src.graph_utils.helpful_sets.algorithm import improve_bisection, improve_bisection_improved
-from src.graph_utils.helpful_sets.helpers import count_cut_size, get_partitions_vertices, get_adjacent_partitions
+from src.graph_utils.helpful_sets.helpers import count_cut_size, get_partitions_vertices, get_adjacent_partitions, \
+    create_adjacent_partitions_without_repeats
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
@@ -140,28 +141,24 @@ class Grid:
             i += 1
         self.lam_reduction_time = time.time() - general_start
 
-    def add_to_partitions_stats(self, partition_number, partition_size, proportional_size):
-        self.partitions_stats[partition_number] = {'partition_size': partition_size,
-                                                   'proportional_size': proportional_size}
+    def add_to_partitions_stats(self, partition_number, partition_weight):
+        self.partitions_stats[partition_number] = partition_weight
 
     def partition(self):
         partition_number = 0
-        sum_weight = 0
         for node in self.G.nodes:
             self.G.nodes[node]['data']['partition'] = partition_number
-            sum_weight += self.G.nodes[node]['data']['weight']
             partition_number += 1
 
-        self.fill_stats(sum_weight)
+        self.fill_stats()
         self.set_adjacent_partitions()
         self.set_partitions_vertices()
 
-    def fill_stats(self, sum_weight):
+    def fill_stats(self):
         partition_number = 0
         for node in self.G.nodes:
             self.add_to_partitions_stats(partition_number,
-                                         self.G.nodes[node]['data']['weight'],
-                                         self.G.nodes[node]['data']['weight'] / sum_weight)
+                                         self.G.nodes[node]['data']['weight'])
             partition_number += 1
 
     def set_adjacent_partitions(self):
@@ -198,15 +195,15 @@ class Grid:
 
     @print_infos
     def improve_partitioning_normal(self):
-        # adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
-        for partition, neighbours in self.adjacent_partitions.items():
+        adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
+        for partition, neighbours in adjacent_partitions.items():
             for vertex in neighbours:
                 improve_bisection(self.G, vertex, partition, self.partitions_vertices)
 
     @print_infos
     def improve_partitioning_improved(self):
-        # adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
-        for partition, neighbours in self.adjacent_partitions.items():
+        adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
+        for partition, neighbours in adjacent_partitions.items():
             for vertex in neighbours:
                 improve_bisection_improved(self.G, vertex, partition, self.partitions_vertices,
                                            self.draw_partitioned_grid)
@@ -235,9 +232,9 @@ class Grid:
             print("No partitions to print information about.")
             return
 
-        for partition_number, data in self.partitions_stats.items():
+        for partition_number, weight in self.partitions_stats.items():
             print('partition: {:>3} | proportional size: {:>3}% | size:  {}'.format(partition_number, round(
-                data['proportional_size'] * 100), data['partition_size']))
+                weight / self.grid_size * 100), weight))
         print('-----------------------------------------------------------------')
 
     def count_diff_between_smallest_and_biggest_partition(self):

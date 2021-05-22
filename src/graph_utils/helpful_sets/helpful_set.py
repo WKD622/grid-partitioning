@@ -32,7 +32,7 @@ def search_for_helpful_set_improved(G, vertices_helpfulness, limit, min_helpfuln
     end = False
     while not end and set_helpfulness < limit and len(vertices_helpfulness) > 0 and len(helpful_set) < s_max:
         vertex_num, vertex_helpfulness = pop_vertex(vertices_helpfulness)
-        if set_helpfulness + vertex_helpfulness < min_helpfulness:
+        if vertex_helpfulness < 0:
             end = True
         else:
             set_helpfulness += vertex_helpfulness

@@ -2,8 +2,6 @@ import operator
 
 import networkx
 
-from src.graph_utils.helpful_sets.helpers import update_helpfulness_of_neighbours, sort_vertices_helpfulness
-
 
 def determine_partition_weight(G, partition_vertices):
     partition_weight = 0
@@ -82,11 +80,21 @@ def min_diff_value_to_consider(S_helpfulness, S_dash_helpfulness):
     return max(-2, - S_helpfulness + 1 + S_dash_helpfulness)
 
 
-def filter_diff_values(vertices_helpfulness, S_helpfulness, S_dash_helpfulness):
+def filter_diff_values(G, vertices_helpfulness, S_helpfulness, S_dash_helpfulness, adj_partition):
     min_diff_val = min_diff_value_to_consider(S_helpfulness, S_dash_helpfulness)
-    return list(filter(lambda vertex: vertex['helpfulness'] >= min_diff_val, vertices_helpfulness))
+    return list(filter(lambda vertex: filtering_function(G, vertex, adj_partition, min_diff_val), vertices_helpfulness))
 
 
-def contains_proper_diff_values(vertices_helpfulness, k_prime, S_dash_helpfulness):
-    return len(filter_diff_values(vertices_helpfulness, k_prime, S_dash_helpfulness))
+def is_neighbour(G, vertex, adj_partition):
+    for v_num in G.adj[vertex]:
+        if G.nodes[v_num]['data']['partition'] == adj_partition:
+            return True
+    return False
 
+
+def filtering_function(G, vertex, adjacent_partition, min_diff_val):
+    return vertex['helpfulness'] >= min_diff_val and is_neighbour(G, vertex['v_num'], adjacent_partition)
+
+
+def contains_proper_diff_values(G, vertices_helpfulness, k_prime, S_dash_helpfulness, adjacent_partition):
+    return len(filter_diff_values(G, vertices_helpfulness, k_prime, S_dash_helpfulness, adjacent_partition))

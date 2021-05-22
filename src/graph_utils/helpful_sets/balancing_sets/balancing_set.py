@@ -1,3 +1,5 @@
+import operator
+
 from src.graph_utils.helpful_sets.balancing_sets.helpers import (create_set_from_list, sort_2_coll_on_helpfulness,
                                                                  update_helpfulness_of_big_set,
                                                                  update_helpfulness_of_2_coll,
