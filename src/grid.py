@@ -236,10 +236,10 @@ class Grid:
 
         smallest = float('inf')
         biggest = -float('inf')
-        for partition_number, data in self.partitions_stats.items():
-            if data['partition_size'] > biggest:
-                biggest = data['partition_size']
-            if data['partition_size'] < smallest:
-                smallest = data['partition_size']
+        for partition_number, weight in self.partitions_stats.items():
+            if weight > biggest:
+                biggest = weight
+            if weight < smallest:
+                smallest = weight
 
         return biggest - smallest

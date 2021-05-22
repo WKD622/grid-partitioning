@@ -15,6 +15,6 @@ def run_experiment(number_of_iterations, number_of_partitions):
         if grid.last_number_of_partitions == number_of_partitions and diff < smallest_diff:
             smallest_diff = diff
             grid.fully_restore()
-            grid.improve_partitioning_normal()
-            grid.draw_partitioned_grid(1, 12)
+            grid.improve_partitioning_improved()
+            grid.draw_partitioned_grid(1, 4)
             grid.print_areas_stats()
