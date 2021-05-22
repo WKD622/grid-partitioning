@@ -36,7 +36,7 @@ def improve_bisection(G, partition_a, partition_b, partitions_vertices):
                 limit /= 2
 
 
-def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices, draw):
+def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices, partitions_stats):
     a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_a], partition_b)
     b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a)
     cut_size = count_cut_size(G, partitions_vertices, partition_a, partition_b)
@@ -75,26 +75,42 @@ def improve_bisection_improved(G, partition_a, partition_b, partitions_vertices,
             continue
 
         limit_a = min(limit_a, S_a_helpfulness)
-        move_set(G, current_partition=partition_a, dest_partition=partition_b, partitions_vertices=partitions_vertices,
-                 to_be_moved=S_a)
+        move_set(G,
+                 current_partition=partition_a,
+                 dest_partition=partition_b,
+                 partitions_vertices=partitions_vertices,
+                 to_be_moved=S_a,
+                 weight=S_a_weight,
+                 partitions_stats=partitions_stats)
+
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a)
         min_, max_ = determine_max_and_min_weight_for_balancing_set(G, S_a_weight, partitions_vertices[partition_b])
-        S_b, S_b_helpfulness, success = search_for_balancing_set_improved(G=G,
-                                                                          vertices_helpfulness=b_vertices_helpfulness,
-                                                                          min_=min_,
-                                                                          max_=max_,
-                                                                          S_helpfulness=S_a_helpfulness,
-                                                                          adjacent_partition=partition_a)
+        S_b, S_b_helpfulness, S_b_weight, success = search_for_balancing_set_improved(G=G,
+                                                                                      vertices_helpfulness=b_vertices_helpfulness,
+                                                                                      min_=min_,
+                                                                                      max_=max_,
+                                                                                      S_helpfulness=S_a_helpfulness,
+                                                                                      adjacent_partition=partition_a)
 
         if success and S_b_helpfulness > -S_a_helpfulness:
-            move_set(G, current_partition=partition_b, dest_partition=partition_a,
-                     partitions_vertices=partitions_vertices, to_be_moved=S_b)
+            move_set(G,
+                     current_partition=partition_b,
+                     dest_partition=partition_a,
+                     partitions_vertices=partitions_vertices,
+                     to_be_moved=S_b,
+                     weight=S_b_weight,
+                     partitions_stats=partitions_stats)
             limit_a += ceil(log(limit_a))
             limit_b += 1
 
         else:
-            move_set(G, current_partition=partition_b, dest_partition=partition_a,
-                     partitions_vertices=partitions_vertices, to_be_moved=S_a)
+            move_set(G,
+                     current_partition=partition_b,
+                     dest_partition=partition_a,
+                     partitions_vertices=partitions_vertices,
+                     to_be_moved=S_a,
+                     weight=S_a_weight,
+                     partitions_stats=partitions_stats)
             limit_a /= 4
             limit_b /= 2
 

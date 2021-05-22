@@ -29,7 +29,7 @@ def search_for_balancing_set_improved(G, vertices_helpfulness, S_helpfulness, mi
 
     if S_dash_helpfulness <= S_helpfulness - 1 and min_ <= S_dash_weight <= max_:
         success = True
-    return S_dash, S_dash_helpfulness, success
+    return S_dash, S_dash_helpfulness, S_dash_weight, success
 
 
 def phase_1_improved(G, vertices_helpfulness, S_helpfulness, max_):

@@ -3,11 +3,17 @@ import operator
 from src.definitions import INDIVISIBLE_AREA
 
 
-def move_set(G, current_partition, dest_partition, partitions_vertices, to_be_moved):
+def update_partitions_stats(current_partition, dest_partition, to_be_moved_weight, partitions_stats):
+    partitions_stats[dest_partition] += to_be_moved_weight
+    partitions_stats[current_partition] -= to_be_moved_weight
+
+
+def move_set(G, current_partition, dest_partition, partitions_vertices, to_be_moved, weight, partitions_stats):
     for vertex_num in to_be_moved:
         partitions_vertices[current_partition].remove(vertex_num)
         partitions_vertices[dest_partition].add(vertex_num)
         G.nodes[vertex_num]['data']['partition'] = dest_partition
+    update_partitions_stats(current_partition, dest_partition, weight, partitions_stats)
 
 
 def sort_vertices_helpfulness(vertices_helpfulness):

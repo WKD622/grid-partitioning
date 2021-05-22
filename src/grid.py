@@ -5,8 +5,8 @@ import networkx as nx
 
 from src.definitions import NORMAL_AREA
 from src.graph_utils.helpful_sets.algorithm import improve_bisection, improve_bisection_improved
-from src.graph_utils.helpful_sets.helpers import count_cut_size, get_partitions_vertices, get_adjacent_partitions, \
-    create_adjacent_partitions_without_repeats
+from src.graph_utils.helpful_sets.helpers import (get_partitions_vertices, get_adjacent_partitions,
+                                                  create_adjacent_partitions_without_repeats)
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
@@ -186,13 +186,6 @@ class Grid:
         greedy_matching_helper(self)
         print('greedy matching time: {} s'.format(round(time.time() - start, 6)))
 
-    def get_cut_size(self, partition_number):
-        if not self.partitions_vertices:
-            print('First partition your graph')
-            return
-
-        return count_cut_size(self.G, self.partitions_vertices[partition_number], partition_number)
-
     @print_infos
     def improve_partitioning_normal(self):
         adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
@@ -205,8 +198,7 @@ class Grid:
         adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
         for partition, neighbours in adjacent_partitions.items():
             for vertex in neighbours:
-                improve_bisection_improved(self.G, vertex, partition, self.partitions_vertices,
-                                           self.draw_partitioned_grid)
+                improve_bisection_improved(self.G, vertex, partition, self.partitions_vertices, self.partitions_stats)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
