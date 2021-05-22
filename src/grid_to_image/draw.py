@@ -69,7 +69,7 @@ def draw_partitions_colors(number_of_colors):
     return [draw_a_color() for i in range(number_of_colors)]
 
 
-def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, name, save=False):
+def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, partitions, name, save=False):
     X = []
     y = []
     colors = []
@@ -82,6 +82,6 @@ def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, name, save
         if random.uniform(0, 1) < p:
             X.append(G.nodes[node]['data']['x'])
             y.append(G.nodes[node]['data']['y'])
-            colors.append(partitions_colors[G.nodes[node]['data']['partition']])
+            colors.append(partitions_colors[partitions[node]])
 
     plot(X, y, colors, s, G, name, save)

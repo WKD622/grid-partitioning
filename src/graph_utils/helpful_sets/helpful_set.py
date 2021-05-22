@@ -8,7 +8,7 @@ def pop_vertex(vertices_helpfulness):
     return vertex_num, vertex_helpfulness
 
 
-def search_for_helpful_set(G, vertices_helpfulness, limit):
+def search_for_helpful_set(G, vertices_helpfulness, limit, partitions):
     helpful_set = set()
     set_helpfulness = 0
     end = False
@@ -19,13 +19,13 @@ def search_for_helpful_set(G, vertices_helpfulness, limit):
         else:
             set_helpfulness += vertex_helpfulness
             helpful_set.add(vertex_num)
-            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness)
+            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
             sort_vertices_helpfulness(vertices_helpfulness)
 
     return helpful_set, set_helpfulness
 
 
-def search_for_helpful_set_improved(G, vertices_helpfulness, limit, s_max):
+def search_for_helpful_set_improved(G, vertices_helpfulness, limit, s_max, partitions):
     helpful_set = set()
     set_weight = 0
     set_helpfulness = 0
@@ -38,7 +38,7 @@ def search_for_helpful_set_improved(G, vertices_helpfulness, limit, s_max):
             set_helpfulness += vertex_helpfulness
             set_weight += G.nodes[vertex_num]['data']['weight']
             helpful_set.add(vertex_num)
-            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness)
+            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
             sort_vertices_helpfulness(vertices_helpfulness)
 
     return helpful_set, set_helpfulness, set_weight

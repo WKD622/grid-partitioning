@@ -10,10 +10,10 @@ from src.graph_utils.helpful_sets.helpers import (update_helpfulness_of_neighbou
                                                   pop_vertex)
 
 
-def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness):
+def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness, partitions):
     success = False
 
-    S_dash, S_dash_helpfulness = phase_1(G, vertices_helpfulness, S_size, S_helpfulness)
+    S_dash, S_dash_helpfulness = phase_1(G, vertices_helpfulness, S_size, S_helpfulness, partitions)
     S_dash, S_dash_helpfulness = phase_2(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
                                          S_helpfulness)
 
@@ -22,7 +22,7 @@ def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness):
     return S_dash, S_dash_helpfulness, success
 
 
-def phase_1(G, vertices_helpfulness, S_size, S_helpfulness):
+def phase_1(G, vertices_helpfulness, S_size, S_helpfulness, partitions):
     set_helpfulness = 0
     helpful_set = set()
     end = False
@@ -38,17 +38,17 @@ def phase_1(G, vertices_helpfulness, S_size, S_helpfulness):
         else:
             set_helpfulness += vertex_helpfulness
             helpful_set.add(vertex_num)
-            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness)
+            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
             sort_vertices_helpfulness(vertices_helpfulness)
 
     return helpful_set, set_helpfulness
 
 
-def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
+def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness, partitions):
     _2_coll = []
 
     while (len(S_dash) < S_size
-           and contains_proper_diff_values(big_set, S_helpfulness, S_dash_helpfulness)):
+           and contains_proper_diff_values(big_set, S_helpfulness, S_dash_helpfulness, partitions)):
         vertices_to_consider = filter_diff_values(big_set, S_helpfulness, S_dash_helpfulness)
 
         v_num, v_helpfulness = pop_vertex_b_s(vertices_to_consider, big_set)
@@ -58,7 +58,8 @@ def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
                                                         v_helpfulness=v_helpfulness,
                                                         helpful_set=_2_set,
                                                         set_helpfulness=_2_set_helpfulness,
-                                                        big_set=big_set)
+                                                        big_set=big_set,
+                                                        partitions=partitions)
 
         while (_2_set_helpfulness < 0
                and len(_2_set) + len(S_dash) < S_size
@@ -69,7 +70,8 @@ def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness):
                                                             v_helpfulness=v_helpfulness,
                                                             helpful_set=_2_set,
                                                             set_helpfulness=_2_set_helpfulness,
-                                                            big_set=big_set)
+                                                            big_set=big_set,
+                                                            partitions=partitions)
 
         if _2_set_helpfulness >= 0:
             add_2_set_to_S_dash(_2_set, S_dash)
@@ -124,9 +126,9 @@ def pop_vertex_b_s(vertices_helpfulness, big_set):
     return vertex_num, vertex_helpfulness
 
 
-def add_vertex_and_update_sets(G, v_num, v_helpfulness, helpful_set, set_helpfulness, big_set):
+def add_vertex_and_update_sets(G, v_num, v_helpfulness, helpful_set, set_helpfulness, big_set, partitions):
     helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
     set_helpfulness += v_helpfulness
-    update_helpfulness_of_neighbours(G, v_num, big_set)
+    update_helpfulness_of_neighbours(G, v_num, big_set, partitions)
     sort_vertices_helpfulness(big_set)
     return set_helpfulness
