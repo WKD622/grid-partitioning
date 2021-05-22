@@ -14,7 +14,8 @@ def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partit
                                                              vertices_helpfulness=a_vertices_helpfulness,
                                                              weight_to_balance=weight_to_balance,
                                                              partitions=partitions)
-        move_set(partitions=partitions,
+        move_set(G,
+                 partitions=partitions,
                  current_partition=partition_a,
                  dest_partition=partition_b,
                  partitions_vertices=partitions_vertices,
@@ -28,7 +29,8 @@ def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partit
                                                              vertices_helpfulness=b_vertices_helpfulness,
                                                              weight_to_balance=weight_to_balance,
                                                              partitions=partitions)
-        move_set(partitions=partitions,
+        move_set(G,
+                 partitions=partitions,
                  current_partition=partition_b,
                  dest_partition=partition_a,
                  partitions_vertices=partitions_vertices,

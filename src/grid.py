@@ -74,13 +74,10 @@ class Grid:
     def fully_restore_with_partitions_improvement(self):
         start = time.time()
         while len(self.reductions) > 0:
-            self.draw_one_step_of_restoration()
             if len(self.reductions) % 30 == 0:
-                self.draw_one_step_of_restoration()
                 self.improve_partitioning_improved()
-                self.draw_one_step_of_restoration()
             self.restore_one_step()
-        # self.improve_partitioning_improved()
+        self.improve_partitioning_improved()
         self.full_restoration_time = time.time() - start
 
     def draw_one_step_of_restoration(self):
@@ -126,7 +123,7 @@ class Grid:
             graph_size = graph_size / 2
         return i
 
-    def draw_partitioning_step(self):
+    def draw_partitioning_step(self, p, s):
         partition_number = 0
         G_copy = self.G.copy()
 
@@ -134,14 +131,14 @@ class Grid:
             G_copy.nodes[node]['data']['partition'] = partition_number
             partition_number += 1
 
-        last_number_of_partitions = G_copy.number_of_nodes()
+        last_number_of_partitions = 2
 
         reductions_copy = self.reductions.copy()
         while len(reductions_copy) > 0:
             if len(reductions_copy) > 0:
                 restore_area_helper(G_copy, reductions_copy.pop())
 
-        convert_partitioned_graph_to_image(G_copy, 1, 70, last_number_of_partitions, self.partitions, 'name')
+        convert_partitioned_graph_to_image(G_copy, p, s, last_number_of_partitions, self.partitions, 'name')
 
     @print_infos
     def reduce_by_lam(self, number_of_partitions, draw_steps=False):
@@ -174,7 +171,6 @@ class Grid:
         self.fill_stats()
         self.set_adjacent_partitions()
         self.set_partitions_and_partitions_vertices()
-        print(self.partitions)
 
     def fill_stats(self):
         partition_number = 0
@@ -228,7 +224,7 @@ class Grid:
                                            partition,
                                            self.partitions_vertices,
                                            self.partitions_stats,
-                                           self.draw_partitioned_grid)
+                                           self.draw_partitioning_step)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')

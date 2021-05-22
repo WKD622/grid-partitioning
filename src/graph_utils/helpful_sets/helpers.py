@@ -1,5 +1,6 @@
 import copy
 import operator
+from time import sleep
 
 from src.definitions import INDIVISIBLE_AREA
 
@@ -9,11 +10,31 @@ def update_partitions_stats(current_partition, dest_partition, to_be_moved_weigh
     partitions_stats[current_partition] -= to_be_moved_weight
 
 
-def move_set(partitions, current_partition, dest_partition, partitions_vertices, to_be_moved, weight, partitions_stats):
+def get_offspring_vertices(G, vertex_num):
+    offspring = set()
+    vertex_data = G.nodes[vertex_num]['data']
+    look_for_offspring(vertex_data, offspring)
+    return offspring
+
+
+def look_for_offspring(vertex_data, offspring):
+    if 'replaces' in vertex_data:
+        for vertex, data in vertex_data['replaces'].items():
+            offspring.add(vertex)
+            if data['data']:
+                look_for_offspring(data['data'], offspring)
+
+
+def move_set(G, partitions, current_partition, dest_partition, partitions_vertices, to_be_moved, weight,
+             partitions_stats):
     for vertex_num in to_be_moved:
+        offspring = get_offspring_vertices(G, vertex_num)
+        offspring.add(vertex_num)
         partitions_vertices[current_partition].remove(vertex_num)
         partitions_vertices[dest_partition].add(vertex_num)
-        partitions[vertex_num] = dest_partition
+        for v in offspring:
+            partitions[v] = dest_partition
+
     update_partitions_stats(current_partition, dest_partition, weight, partitions_stats)
 
 
