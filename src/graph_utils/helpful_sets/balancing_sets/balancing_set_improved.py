@@ -90,7 +90,7 @@ def phase_2_improved(G, S_dash, S_dash_helpfulness, S_dash_weight, big_set, S_he
                                                                                max_=max_,
                                                                                big_set=big_set,
                                                                                partitions=partitions)
-        # draw_2_set(G, _2_set)
+
         if len(_2_set) > 0:
             if _2_set_helpfulness >= 0:
                 S_dash_weight = add_2_set_to_S_dash_improved(_2_set, _2_set_weight, S_dash, S_dash_weight)

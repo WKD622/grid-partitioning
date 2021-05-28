@@ -2,41 +2,39 @@ from src.graph_utils.helpful_sets.helpers import set_helpfulness_for_vertices, p
     update_helpfulness_of_neighbours, sort_vertices_helpfulness, move_set
 
 
-def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partitions_stats, partitions):
+def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partitions_vertices_c, partitions_stats,
+                     partitions):
     a_partition_size = partitions_stats[partition_a]
     b_partition_size = partitions_stats[partition_b]
     partition_weight_diff = abs(a_partition_size - b_partition_size)
     weight_to_balance = p * partition_weight_diff
     if a_partition_size > b_partition_size:
-        a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_a], partition_b,
-                                                              partitions)
+        current_partition = partition_a
+        dest_partition = partition_b
+        a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_a], partition_b,
+                                                              partitions, sq=False)
         vertices, vertices_weight = find_vertices_to_balance(G,
                                                              vertices_helpfulness=a_vertices_helpfulness,
                                                              weight_to_balance=weight_to_balance,
                                                              partitions=partitions)
-        move_set(G,
-                 partitions=partitions,
-                 current_partition=partition_a,
-                 dest_partition=partition_b,
-                 partitions_vertices=partitions_vertices,
-                 to_be_moved=vertices,
-                 weight=vertices_weight,
-                 partitions_stats=partitions_stats)
     else:
-        b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a,
-                                                              partitions)
+        current_partition = partition_b
+        dest_partition = partition_a
+        b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_b], partition_a,
+                                                              partitions, sq=False)
         vertices, vertices_weight = find_vertices_to_balance(G,
                                                              vertices_helpfulness=b_vertices_helpfulness,
                                                              weight_to_balance=weight_to_balance,
                                                              partitions=partitions)
-        move_set(G,
-                 partitions=partitions,
-                 current_partition=partition_b,
-                 dest_partition=partition_a,
-                 partitions_vertices=partitions_vertices,
-                 to_be_moved=vertices,
-                 weight=vertices_weight,
-                 partitions_stats=partitions_stats)
+    move_set(G=G,
+             partitions=partitions,
+             current_partition=current_partition,
+             dest_partition=dest_partition,
+             partitions_vertices=partitions_vertices,
+             to_be_moved=vertices,
+             weight=vertices_weight,
+             partitions_stats=partitions_stats,
+             partitions_vertices_c=partitions_vertices_c)
 
 
 def find_vertices_to_balance(G, weight_to_balance, vertices_helpfulness, partitions):

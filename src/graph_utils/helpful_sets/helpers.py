@@ -1,6 +1,5 @@
 import copy
 import operator
-from time import sleep
 
 from src.definitions import INDIVISIBLE_AREA
 
@@ -8,6 +7,9 @@ from src.definitions import INDIVISIBLE_AREA
 def update_partitions_stats(current_partition, dest_partition, to_be_moved_weight, partitions_stats):
     partitions_stats[dest_partition] += to_be_moved_weight
     partitions_stats[current_partition] -= to_be_moved_weight
+    # if partitions_stats[current_partition] < 0:
+    #     print('ERROR')
+    #     sleep(100)
 
 
 def get_offspring_vertices(G, vertex_num):
@@ -23,16 +25,36 @@ def look_for_offspring(vertex_data, offspring):
             offspring.add(vertex)
             if data['data']:
                 look_for_offspring(data['data'], offspring)
+    else:
+        offspring.add(vertex_data['num'])
 
 
-def move_set(G, partitions, current_partition, dest_partition, partitions_vertices, to_be_moved, weight,
-             partitions_stats):
+def count_sum_weight(G, partition_n, partitions_vertices):
+    weight = 0
+    for v in partitions_vertices[partition_n]:
+        print(v, G.nodes[v]['data']['weight'])
+        weight += G.nodes[v]['data']['weight']
+
+
+def move_set_normal(partitions, current_partition, dest_partition, partitions_vertices, to_be_moved,
+                    weight, partitions_stats):
+    for vertex_num in to_be_moved:
+        partitions_vertices[current_partition].remove(vertex_num)
+        partitions_vertices[dest_partition].add(vertex_num)
+        partitions[vertex_num] = dest_partition
+    update_partitions_stats(current_partition, dest_partition, weight, partitions_stats)
+
+
+def move_set(G, partitions, current_partition, dest_partition, partitions_vertices_c, partitions_vertices, to_be_moved,
+             weight, partitions_stats):
     for vertex_num in to_be_moved:
         offspring = get_offspring_vertices(G, vertex_num)
         offspring.add(vertex_num)
-        partitions_vertices[current_partition].remove(vertex_num)
-        partitions_vertices[dest_partition].add(vertex_num)
+        partitions_vertices_c[current_partition].remove(vertex_num)
+        partitions_vertices_c[dest_partition].add(vertex_num)
         for v in offspring:
+            partitions_vertices[current_partition].remove(v)
+            partitions_vertices[dest_partition].add(v)
             partitions[v] = dest_partition
 
     update_partitions_stats(current_partition, dest_partition, weight, partitions_stats)
@@ -118,10 +140,10 @@ def count_set_helpfulness(G, helpful_set):
     return helpfulness
 
 
-def set_helpfulness_for_vertices(G, partition, adj_part, partitions):
+def set_helpfulness_for_vertices(G, partition, adj_part, partitions, sq=True):
     helpfulness_of_vertices = []
     for vertex in partition.intersection(set(G.nodes)):
-        vertex_helpfulness = count_vertex_helpfulness(G, vertex, adj_part, {}, partitions)
+        vertex_helpfulness = count_vertex_helpfulness(G, vertex, adj_part, {}, partitions, sq)
         helpfulness_of_vertices.append({'v_num': vertex, 'helpfulness': vertex_helpfulness})
 
     sort_vertices_helpfulness(helpfulness_of_vertices)
@@ -132,25 +154,27 @@ def set_vertex_helpfulness(G, v_num, helpfulness):
     G.nodes[v_num]['data']['helpfulness'] = helpfulness
 
 
-def count_adj_vertices(G, v_num, current_partition, adjacent_partition):
+def count_adj_vertices(G, partitions, v_num, current_partition, adjacent_partition):
     counter = 0
     for v in G.adj[v_num]:
-        if (G.nodes[v]['data']['partition'] == current_partition
-                or G.nodes[v]['data']['partition'] == adjacent_partition):
+        if (partitions[v] == current_partition
+                or partitions[v] == adjacent_partition):
             counter += 1
     return counter
 
 
-def count_vertex_helpfulness(G, v_num, adj_part, helpful_set, partitions):
+def count_vertex_helpfulness(G, v_num, adj_part, helpful_set, partitions, sq=True):
     if G.nodes[v_num]['data']['type'] == INDIVISIBLE_AREA:
         return float('-inf')
-    curr_partition = partitions[v_num]
 
-    # print(v_ext(G, v_num, adj_part, helpful_set) - v_int(G, v_num, helpful_set) + v_int_s(G, v_num, helpful_set) - (
-    #         4 - count_adj_vertices(G, v_num, curr_partition, adj_part)))
+    a = 0
+    if not sq:
+        curr_partition = partitions[v_num]
+        a = (4 - count_adj_vertices(G, partitions, v_num, curr_partition, adj_part))
     return (v_ext(G, v_num, adj_part, helpful_set, partitions)
             - v_int(G, v_num, helpful_set, partitions)
-            + v_int_s(G, v_num, helpful_set))
+            + v_int_s(G, v_num, helpful_set)
+            - a)
 
 
 def v_ext(G, node_num, adjacent_partition, helpful_set, partitions):

@@ -60,4 +60,4 @@ def convert_image_to_graph(path, show_progress):
                                                   initial_area_number)
     if show_progress:
         print("conversion finished: 100%")
-    return G, areas, image.shape[0] * image.shape[1]
+    return G, areas, image.shape[0] * image.shape[1], image.shape[0], image.shape[1],

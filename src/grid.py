@@ -1,4 +1,5 @@
 import time
+from math import floor
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -22,13 +23,16 @@ class Grid:
         self.show_progress = show_progress
         if grid_name:
             start = time.time()
-            G, areas, grid_size = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name,
-                                                         self.show_progress)
+            G, areas, grid_size, dim_1, dim_2 = convert_image_to_graph(str(get_project_root()) + '/grids/' + grid_name,
+                                                                       self.show_progress)
             self.conversion_time = time.time() - start
             self.grid_size = grid_size
             self.G = G
             self.areas = areas
             self.last_number_of_partitions = G.number_of_nodes()
+        self.dim_1 = dim_1
+        self.dim_2 = dim_2
+        self.bigger_dim = dim_1 if dim_1 > dim_2 else dim_2
         self.reductions = []
         self.drawing_initial_grid_time = None
         self.full_restoration_time = None
@@ -73,19 +77,25 @@ class Grid:
     @print_infos
     def fully_restore_with_partitions_improvement(self):
         start = time.time()
+        number_of_reductions_done = 0
+        init_red_length = len(self.reductions)
         while len(self.reductions) > 0:
-            if len(self.reductions) % 30 == 0:
+            if (number_of_reductions_done / init_red_length > 0.7
+                    and floor(len(self.reductions) % (init_red_length * 0.05)) == 0):
                 self.improve_partitioning_improved()
             self.restore_one_step()
-        self.improve_partitioning_improved()
+            number_of_reductions_done += 1
+        self.improve_partitioning_normal()
         self.full_restoration_time = time.time() - start
 
-    def draw_one_step_of_restoration(self):
+    @print_infos
+    def draw_one_step_of_restoration(self, p, s, title=''):
         G = self.G.copy()
         reductions = self.reductions.copy()
         while len(reductions) > 0:
             restore_area_helper(G, reductions.pop())
-        convert_partitioned_graph_to_image(G, 1, 30, self.last_number_of_partitions, self.partitions, 'ala')
+        convert_partitioned_graph_to_image(G, p, s, self.last_number_of_partitions, self.partitions, 'name', save=False,
+                                           title=title)
 
     def restore_one_step(self):
         if len(self.reductions) > 0:
@@ -123,7 +133,8 @@ class Grid:
             graph_size = graph_size / 2
         return i
 
-    def draw_partitioning_step(self, p, s):
+    @print_infos
+    def draw_partitioning_step(self, p, s, title='', save=False, name='name'):
         partition_number = 0
         G_copy = self.G.copy()
 
@@ -138,7 +149,9 @@ class Grid:
             if len(reductions_copy) > 0:
                 restore_area_helper(G_copy, reductions_copy.pop())
 
-        convert_partitioned_graph_to_image(G_copy, p, s, last_number_of_partitions, self.partitions, 'name')
+        convert_partitioned_graph_to_image(G_copy, p, s, last_number_of_partitions, self.partitions, name=name,
+                                           save=save,
+                                           title=title)
 
     @print_infos
     def reduce_by_lam(self, number_of_partitions, draw_steps=False):
@@ -206,25 +219,26 @@ class Grid:
 
     @print_infos
     def improve_partitioning_normal(self):
-        adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
-        for partition, neighbours in adjacent_partitions.items():
+        for partition, neighbours in self.adjacent_partitions.items():
             for vertex in neighbours:
-                improve_bisection(self.G, self.partitions, vertex, partition, self.partitions_vertices, self.partitions_stats)
+                improve_bisection(self.G, self.partitions, vertex, partition, self.partitions_vertices,
+                                  self.partitions_stats)
 
     @print_infos
     def improve_partitioning_improved(self):
-        all_vertices = set(self.G.nodes)
         adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
         for partition, neighbours in adjacent_partitions.items():
             for vertex in neighbours:
-                improve_bisection_improved(self.G,
-                                           self.partitions,
-                                           all_vertices,
-                                           vertex,
-                                           partition,
-                                           self.partitions_vertices,
-                                           self.partitions_stats,
-                                           self.draw_partitioning_step)
+                improve_bisection_improved(G=self.G,
+                                           bigger_dim=self.bigger_dim,
+                                           partitions=self.partitions,
+                                           all_vertices=set(self.G.nodes),
+                                           partition_a=vertex,
+                                           partition_b=partition,
+                                           partitions_vertices=self.partitions_vertices,
+                                           partitions_stats=self.partitions_stats,
+                                           draw=self.draw_partitioning_step,
+                                           print_stats=self.print_areas_stats)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')

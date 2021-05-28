@@ -88,7 +88,7 @@ def filter_diff_values(G, vertices_helpfulness, S_helpfulness, S_dash_helpfulnes
 
 def is_neighbour(G, vertex, adj_partition, partitions):
     for v_num in G.adj[vertex]:
-        if partitions[v_num] == adj_partition:
+        if partitions.get(v_num) == adj_partition:
             return True
     return False
 

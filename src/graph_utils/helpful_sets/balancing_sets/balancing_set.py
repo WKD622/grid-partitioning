@@ -1,5 +1,3 @@
-import operator
-
 from src.graph_utils.helpful_sets.balancing_sets.helpers import (create_set_from_list, sort_2_coll_on_helpfulness,
                                                                  update_helpfulness_of_big_set,
                                                                  update_helpfulness_of_2_coll,
@@ -10,12 +8,12 @@ from src.graph_utils.helpful_sets.helpers import (update_helpfulness_of_neighbou
                                                   pop_vertex)
 
 
-def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness, partitions):
+def search_for_balancing_set(G, vertices_helpfulness, S_size, S_helpfulness, partitions, adjacent_partition):
     success = False
 
     S_dash, S_dash_helpfulness = phase_1(G, vertices_helpfulness, S_size, S_helpfulness, partitions)
     S_dash, S_dash_helpfulness = phase_2(G, S_dash, S_dash_helpfulness, vertices_helpfulness, S_size,
-                                         S_helpfulness)
+                                         S_helpfulness, partitions, adjacent_partition)
 
     if S_dash_helpfulness <= S_helpfulness - 1 and len(S_dash) == S_size:
         success = True
@@ -44,12 +42,14 @@ def phase_1(G, vertices_helpfulness, S_size, S_helpfulness, partitions):
     return helpful_set, set_helpfulness
 
 
-def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness, partitions):
+def phase_2(G, S_dash, S_dash_helpfulness, big_set, S_size, S_helpfulness, partitions, adjacent_partition):
     _2_coll = []
 
     while (len(S_dash) < S_size
-           and contains_proper_diff_values(big_set, S_helpfulness, S_dash_helpfulness, partitions)):
-        vertices_to_consider = filter_diff_values(big_set, S_helpfulness, S_dash_helpfulness)
+           and contains_proper_diff_values(G, big_set, S_helpfulness, S_dash_helpfulness, adjacent_partition,
+                                           partitions)):
+        vertices_to_consider = filter_diff_values(G, big_set, S_helpfulness, S_dash_helpfulness, adjacent_partition,
+                                                  partitions)
 
         v_num, v_helpfulness = pop_vertex_b_s(vertices_to_consider, big_set)
         _2_set, _2_set_helpfulness = init_2_set()

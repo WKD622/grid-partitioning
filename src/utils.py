@@ -7,7 +7,7 @@ def get_project_root() -> Path:
 
 def print_infos(function):
     def wrapper(*args, **kwargs):
-        # print(function.__name__ + " started")
+        print(function.__name__ + " started")
         out = function(*args, **kwargs)
         print(function.__name__ + " finished")
         return out
