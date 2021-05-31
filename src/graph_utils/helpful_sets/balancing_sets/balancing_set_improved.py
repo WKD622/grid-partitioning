@@ -6,43 +6,56 @@ from src.graph_utils.helpful_sets.balancing_sets.helpers import (contains_proper
                                                                  update_helpfulness_of_big_set,
                                                                  sort_2_coll_on_helpfulness, create_set_from_list)
 from src.graph_utils.helpful_sets.helpers import (update_helpfulness_of_neighbours, sort_vertices_helpfulness,
-                                                  pop_vertex_improved)
+                                                  pop_vertex_improved, update_adjacent_vertices,
+                                                  update_helpfulness_of_neighbours_improved,
+                                                  find_vertices_adj_to_another_partition)
 from src.grid_to_image.draw import plot
 
 
-def search_for_balancing_set_improved(G, vertices_helpfulness, S_helpfulness, min_, max_, adjacent_partition,
+def search_for_balancing_set_improved(G, vertices_helpfulness, S_helpfulness, min_, max_, adj_partition, cur_partition,
                                       partitions):
+    vertices_helpfulness_to_consider, adj_set = find_vertices_adj_to_another_partition(G,
+                                                                                       partitions,
+                                                                                       vertices_helpfulness,
+                                                                                       adj_partition,
+                                                                                       cur_partition)
     success = False
 
     S_dash, S_dash_helpfulness, S_dash_weight = phase_1_improved(G=G,
                                                                  vertices_helpfulness=vertices_helpfulness,
+                                                                 vertices_helpfulness_to_consider=vertices_helpfulness_to_consider,
+                                                                 adj_set=adj_set,
                                                                  S_helpfulness=S_helpfulness,
                                                                  max_=max_,
-                                                                 partitions=partitions)
+                                                                 partitions=partitions,
+                                                                 cur_partition=cur_partition)
 
-    S_dash, S_dash_helpfulness, S_dash_weight = phase_2_improved(G=G,
-                                                                 S_dash=S_dash,
-                                                                 S_dash_helpfulness=S_dash_helpfulness,
-                                                                 S_dash_weight=S_dash_weight,
-                                                                 big_set=vertices_helpfulness,
-                                                                 S_helpfulness=S_helpfulness,
-                                                                 max_=max_,
-                                                                 adjacent_partition=adjacent_partition,
-                                                                 partitions=partitions)
+    # S_dash, S_dash_helpfulness, S_dash_weight = phase_2_improved(G=G,
+    #                                                              S_dash=S_dash,
+    #                                                              S_dash_helpfulness=S_dash_helpfulness,
+    #                                                              S_dash_weight=S_dash_weight,
+    #                                                              big_set=vertices_helpfulness,
+    #                                                              S_helpfulness=S_helpfulness,
+    #                                                              max_=max_,
+    #                                                              adjacent_partition=adj_partition,
+    #                                                              partitions=partitions)
 
     if S_dash_helpfulness <= S_helpfulness - 1 and min_ <= S_dash_weight <= max_:
         success = True
     return S_dash, S_dash_helpfulness, S_dash_weight, success
 
 
-def phase_1_improved(G, vertices_helpfulness, S_helpfulness, max_, partitions):
+def phase_1_improved(G, vertices_helpfulness, vertices_helpfulness_to_consider, adj_set, S_helpfulness, max_,
+                     cur_partition, partitions):
     set_helpfulness = 0
     set_weight = 0
     helpful_set = set()
     end = False
+
     while (not end
-           and len(vertices_helpfulness) > 0):
-        vertex_data = vertices_helpfulness.pop()
+           and len(vertices_helpfulness_to_consider) > 0):
+        vertex_data = vertices_helpfulness_to_consider.pop()
+        vertices_helpfulness.remove(vertex_data)
         vertex_helpfulness = vertex_data['helpfulness']
         vertex_num = vertex_data['v_num']
         vertex_weight = G.nodes[vertex_num]['data']['weight']
@@ -50,15 +63,53 @@ def phase_1_improved(G, vertices_helpfulness, S_helpfulness, max_, partitions):
                 or vertex_weight + set_weight > max_
                 or set_helpfulness + vertex_helpfulness >= S_helpfulness - 1):
             end = True
-            vertices_helpfulness.insert(0, vertex_data)
+            vertices_helpfulness_to_consider.insert(0, vertex_data)
         else:
             set_helpfulness += vertex_helpfulness
             set_weight += vertex_weight
             helpful_set.add(vertex_num)
-            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
-            sort_vertices_helpfulness(vertices_helpfulness)
+            update_adjacent_vertices(G=G,
+                                     v_num=vertex_num,
+                                     partitions=partitions,
+                                     vertices_helpfulness=vertices_helpfulness,
+                                     vertices_helpfulness_to_consider=vertices_helpfulness_to_consider,
+                                     adj_set=adj_set,
+                                     helpful_set=helpful_set,
+                                     cur_partition=cur_partition)
+            update_helpfulness_of_neighbours_improved(G=G,
+                                                      v_num=vertex_num,
+                                                      vertices_helpfulness=vertices_helpfulness,
+                                                      vertices_helpfulness_to_consider=vertices_helpfulness_to_consider,
+                                                      partitions=partitions)
+        sort_vertices_helpfulness(G, vertices_helpfulness_to_consider)
 
     return helpful_set, set_helpfulness, set_weight
+
+
+# def phase_1_improved(G, vertices_helpfulness, S_helpfulness, max_, partitions):
+#     set_helpfulness = 0
+#     set_weight = 0
+#     helpful_set = set()
+#     end = False
+#     while (not end
+#            and len(vertices_helpfulness) > 0):
+#         vertex_data = vertices_helpfulness.pop()
+#         vertex_helpfulness = vertex_data['helpfulness']
+#         vertex_num = vertex_data['v_num']
+#         vertex_weight = G.nodes[vertex_num]['data']['weight']
+#         if (vertex_helpfulness < 0
+#                 or vertex_weight + set_weight > max_
+#                 or set_helpfulness + vertex_helpfulness >= S_helpfulness - 1):
+#             end = True
+#             vertices_helpfulness.insert(0, vertex_data)
+#         else:
+#             set_helpfulness += vertex_helpfulness
+#             set_weight += vertex_weight
+#             helpful_set.add(vertex_num)
+#             update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
+#             sort_vertices_helpfulness(G, vertices_helpfulness)
+#
+#     return helpful_set, set_helpfulness, set_weight
 
 
 def phase_2_improved(G, S_dash, S_dash_helpfulness, S_dash_weight, big_set, S_helpfulness, max_, adjacent_partition,
@@ -152,7 +203,7 @@ def add_vert_with_helpfulness_gte_zero(G, _2_set, _2_set_helpfulness, _2_set_wei
         else:
             end = True
             big_set.insert(0, {'v_num': v_num, 'helpfulness': v_helpfulness})
-            sort_vertices_helpfulness(big_set)
+            sort_vertices_helpfulness(G, big_set)
 
     return _2_set_helpfulness, _2_set_weight
 
@@ -199,7 +250,7 @@ def add_vertex_and_update_sets(G, v_num, v_helpfulness, v_weight, helpful_set, s
     set_helpfulness += v_helpfulness
     set_weight += v_weight
     update_helpfulness_of_neighbours(G=G, v_num=v_num, vertices_helpfulness=big_set, partitions=partitions)
-    sort_vertices_helpfulness(big_set)
+    sort_vertices_helpfulness(G, big_set)
     return set_helpfulness, set_weight
 
 

@@ -8,7 +8,7 @@ from src.grid_to_image.helpers import get_color
 
 
 def plot(X, y, colors, s, G, name, save=False, title=''):
-    figure(figsize=(4, 4))
+    figure(figsize=(3, 3))
     for i in range(len(X)):
         plt.scatter(X[i], y[i], color=colors[i], marker="s", s=s)
     plt.gca().invert_yaxis()

@@ -1,5 +1,6 @@
 from src.graph_utils.helpful_sets.helpers import set_helpfulness_for_vertices, pop_vertex, \
-    update_helpfulness_of_neighbours, sort_vertices_helpfulness, move_set
+    update_helpfulness_of_neighbours, sort_vertices_helpfulness, move_set, find_vertices_adj_to_another_partition, \
+    update_adjacent_vertices
 
 
 def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partitions_vertices_c, partitions_stats,
@@ -9,26 +10,30 @@ def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partit
     partition_weight_diff = abs(a_partition_size - b_partition_size)
     weight_to_balance = p * partition_weight_diff
     if a_partition_size > b_partition_size:
-        current_partition = partition_a
+        cur_partition = partition_a
         dest_partition = partition_b
         a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_a], partition_b,
                                                               partitions, sq=False)
         vertices, vertices_weight = find_vertices_to_balance(G,
                                                              vertices_helpfulness=a_vertices_helpfulness,
                                                              weight_to_balance=weight_to_balance,
-                                                             partitions=partitions)
+                                                             partitions=partitions,
+                                                             adj_partition=dest_partition,
+                                                             cur_partition=cur_partition)
     else:
-        current_partition = partition_b
+        cur_partition = partition_b
         dest_partition = partition_a
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_b], partition_a,
                                                               partitions, sq=False)
         vertices, vertices_weight = find_vertices_to_balance(G,
                                                              vertices_helpfulness=b_vertices_helpfulness,
                                                              weight_to_balance=weight_to_balance,
-                                                             partitions=partitions)
+                                                             partitions=partitions,
+                                                             adj_partition=dest_partition,
+                                                             cur_partition=cur_partition)
     move_set(G=G,
              partitions=partitions,
-             current_partition=current_partition,
+             current_partition=cur_partition,
              dest_partition=dest_partition,
              partitions_vertices=partitions_vertices,
              to_be_moved=vertices,
@@ -37,23 +42,35 @@ def balance_greedily(G, p, partition_a, partition_b, partitions_vertices, partit
              partitions_vertices_c=partitions_vertices_c)
 
 
-def find_vertices_to_balance(G, weight_to_balance, vertices_helpfulness, partitions):
+def find_vertices_to_balance(G, weight_to_balance, vertices_helpfulness, partitions, adj_partition, cur_partition):
+    vertices_helpfulness_to_consider, adj_set = find_vertices_adj_to_another_partition(G,
+                                                                                       partitions,
+                                                                                       vertices_helpfulness,
+                                                                                       adj_partition,
+                                                                                       cur_partition)
+
     vertices_to_balance = set()
-    checked_vertices = set()
 
     set_weight = 0
     end = False
 
-    while not end and len(vertices_helpfulness) > 0 and set_weight < weight_to_balance:
-        vertex_num, vertex_helpfulness = pop_vertex(vertices_helpfulness)
+    while not end and len(vertices_helpfulness_to_consider) > 0 and set_weight < weight_to_balance:
+        vertex_num, vertex_helpfulness = pop_vertex(vertices_helpfulness_to_consider)
         vertex_weight = G.nodes[vertex_num]['data']['weight']
         if set_weight + vertex_weight > weight_to_balance:
             end = True
-            checked_vertices.add(vertex_num)
         else:
             set_weight += G.nodes[vertex_num]['data']['weight']
             vertices_to_balance.add(vertex_num)
-            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
-            sort_vertices_helpfulness(vertices_helpfulness)
+            update_adjacent_vertices(G=G,
+                                     v_num=vertex_num,
+                                     partitions=partitions,
+                                     vertices_helpfulness=vertices_helpfulness,
+                                     vertices_helpfulness_to_consider=vertices_helpfulness_to_consider,
+                                     adj_set=adj_set,
+                                     helpful_set=vertices_to_balance,
+                                     cur_partition=cur_partition)
+            update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness_to_consider, partitions)
+            sort_vertices_helpfulness(G, vertices_helpfulness_to_consider)
 
     return vertices_to_balance, set_weight

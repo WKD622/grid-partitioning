@@ -9,6 +9,7 @@ from src.graph_utils.helpful_sets.algorithm import improve_bisection, improve_bi
 from src.graph_utils.helpful_sets.helpers import (get_partitions_vertices, get_adjacent_partitions,
                                                   create_adjacent_partitions_without_repeats)
 from src.graph_utils.lam_algorithm import lam_algorithm, greedy_matching as greedy_matching_helper
+from src.graph_utils.noises_removal import remove_noises
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
 from src.graph_utils.restoration import restore_area as restore_area_helper
 from src.grid_to_image.draw import optimized_convert_graph_to_image_2, convert_partitioned_graph_to_image
@@ -30,10 +31,11 @@ class Grid:
             self.G = G
             self.areas = areas
             self.last_number_of_partitions = G.number_of_nodes()
-        self.dim_1 = dim_1
-        self.dim_2 = dim_2
+        self.vertical_size = dim_1
+        self.horizontal_size = dim_2
         self.bigger_dim = dim_1 if dim_1 > dim_2 else dim_2
         self.reductions = []
+        self.areas_reductions = []
         self.drawing_initial_grid_time = None
         self.full_restoration_time = None
         self.lam_reduction_time = None
@@ -61,7 +63,7 @@ class Grid:
     def reduce_areas(self):
         start = time.time()
         new_vertices_names = reduce_areas_helper(self.G, self.areas)
-        self.reductions = self.reductions + new_vertices_names
+        self.areas_reductions = self.areas_reductions + new_vertices_names
         self.areas_reduction_time = time.time() - start
 
     def restore_area(self, vertex):
@@ -79,27 +81,46 @@ class Grid:
         start = time.time()
         number_of_reductions_done = 0
         init_red_length = len(self.reductions)
+        # self.draw_one_step_of_restoration(1, 5)
         while len(self.reductions) > 0:
-            if (number_of_reductions_done / init_red_length > 0.7
-                    and floor(len(self.reductions) % (init_red_length * 0.05)) == 0):
-                self.improve_partitioning_improved()
             self.restore_one_step()
             number_of_reductions_done += 1
-        self.improve_partitioning_normal()
+            if (number_of_reductions_done / init_red_length > 0.90
+                    and floor(len(self.reductions) % (init_red_length * 0.03)) == 0):
+                self.improve_partitioning_improved()
+        while len(self.areas_reductions) > 0:
+            self.restore_areas_one_step()
         self.full_restoration_time = time.time() - start
+
+    @print_infos
+    def remove_noises(self):
+        remove_noises(G=self.G,
+                      horizontal_size=self.horizontal_size,
+                      partitions=self.partitions,
+                      partitions_vertices=self.partitions_vertices,
+                      number_of_partitions=self.last_number_of_partitions)
 
     @print_infos
     def draw_one_step_of_restoration(self, p, s, title=''):
         G = self.G.copy()
         reductions = self.reductions.copy()
+        areas_reductions = self.areas_reductions.copy()
         while len(reductions) > 0:
             restore_area_helper(G, reductions.pop())
+        while len(areas_reductions) > 0:
+            restore_area_helper(G, areas_reductions.pop())
         convert_partitioned_graph_to_image(G, p, s, self.last_number_of_partitions, self.partitions, 'name', save=False,
                                            title=title)
 
     def restore_one_step(self):
         if len(self.reductions) > 0:
             self.restore_area(self.reductions.pop())
+        else:
+            print("No areas to restore")
+
+    def restore_areas_one_step(self):
+        if len(self.areas_reductions) > 0:
+            self.restore_area(self.areas_reductions.pop())
         else:
             print("No areas to restore")
 
@@ -237,8 +258,14 @@ class Grid:
                                            partition_b=partition,
                                            partitions_vertices=self.partitions_vertices,
                                            partitions_stats=self.partitions_stats,
-                                           draw=self.draw_partitioning_step,
-                                           print_stats=self.print_areas_stats)
+                                           draw=self.draw_one_step_of_restoration)
+
+    def get_cut_size(self):
+        counter = 0
+        for a, b in self.G.edges:
+            if self.partitions[a] != self.partitions[b]:
+                counter += 1
+        return counter
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
@@ -260,6 +287,7 @@ class Grid:
 
     def print_areas_stats(self):
         print('\n-------------------------- AREAS STATS --------------------------')
+        print("CUT SIZE: ", self.get_cut_size())
         if not len(self.partitions_stats):
             print("No partitions to print information about.")
             return

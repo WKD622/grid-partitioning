@@ -1,4 +1,5 @@
 import operator
+import random
 
 import networkx
 
@@ -19,9 +20,12 @@ def determine_partition_weight(G, partition_vertices):
 
 
 def determine_max_and_min_weight_for_balancing_set(G, S_a_weight, partition_vertices):
-    partition_weight, max_weight, min_weight, grace = determine_partition_weight(G, partition_vertices)
-    min_ = abs(S_a_weight - max_weight - grace)
-    max_ = abs(S_a_weight - min_weight + grace)
+    if random.randint(0, 1):
+        min_ = abs(S_a_weight - 0.1 * S_a_weight)
+        max_ = abs(S_a_weight + 0.1 * S_a_weight)
+    else:
+        min_ = abs(S_a_weight - 0.2 * S_a_weight)
+        max_ = abs(S_a_weight - 0.1 * S_a_weight)
     return min_, max_
 
 

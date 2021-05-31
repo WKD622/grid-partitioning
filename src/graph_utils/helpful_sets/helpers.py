@@ -1,5 +1,4 @@
 import copy
-import operator
 
 from src.definitions import INDIVISIBLE_AREA
 
@@ -60,8 +59,8 @@ def move_set(G, partitions, current_partition, dest_partition, partitions_vertic
     update_partitions_stats(current_partition, dest_partition, weight, partitions_stats)
 
 
-def sort_vertices_helpfulness(vertices_helpfulness):
-    vertices_helpfulness.sort(key=operator.itemgetter('helpfulness'))
+def sort_vertices_helpfulness(G, vertices_helpfulness):
+    vertices_helpfulness.sort(key=lambda x: (x['helpfulness'], G.nodes[x['v_num']]['data']['weight']))
 
 
 def count_cut_size(G, partitions, partitions_vertices, partition_a_number, partition_b_number):
@@ -133,6 +132,58 @@ def update_helpfulness_of_neighbours(G, v_num, vertices_helpfulness, partitions)
             vertex['helpfulness'] += 2
 
 
+def update_helpfulness_of_neighbours_improved(G, v_num, vertices_helpfulness, vertices_helpfulness_to_consider,
+                                              partitions):
+    partition = partitions[v_num]
+    adjacent_vertices = set()
+    for node_num in G.adj[v_num]:
+        if partitions[node_num] == partition:
+            adjacent_vertices.add(node_num)
+    for vertex in vertices_helpfulness:
+        if vertex['v_num'] in adjacent_vertices:
+            vertex['helpfulness'] += 2
+    for vertex in vertices_helpfulness_to_consider:
+        if vertex['v_num'] in adjacent_vertices:
+            vertex['helpfulness'] += 2
+
+
+def check_if_can_be_added(G, vertex, partitions, partition, cur_partition):
+    def adjacent_to_other_partition():
+        for v_ in G.adj[vertex]:
+            if partitions[v_] != partition and partitions[v_] != cur_partition:
+                return True
+        return False
+
+    for v in G.adj[vertex]:
+        if partitions[v] == partition:
+            return True
+    return False
+
+
+def find_vertices_adj_to_another_partition(G, partitions, vertices_helpfulness, adj_partition, cur_partition):
+    vertices_to_check = list(filter(lambda x: x['helpfulness'] >= -2, vertices_helpfulness))
+    result = []
+    result_set = set()
+    for vertex in vertices_to_check:
+        if check_if_can_be_added(G, vertex['v_num'], partitions, adj_partition, cur_partition):
+            result.append(vertex)
+            result_set.add(vertex['v_num'])
+    return result, result_set
+
+
+def update_adjacent_vertices(G, v_num, partitions, vertices_helpfulness, vertices_helpfulness_to_consider, adj_set,
+                             cur_partition, helpful_set):
+    adj_set.remove(v_num)
+    to_add = set()
+    for v in G.adj[v_num]:
+        if v not in adj_set and v not in helpful_set and partitions[v] == cur_partition:
+            adj_set.add(v)
+            to_add.add(v)
+    for v in vertices_helpfulness:
+        if v['v_num'] in to_add:
+            vertices_helpfulness_to_consider.append(v)
+
+
 def count_set_helpfulness(G, helpful_set):
     helpfulness = 0
     for vertex_num in helpful_set:
@@ -146,7 +197,7 @@ def set_helpfulness_for_vertices(G, partition, adj_part, partitions, sq=True):
         vertex_helpfulness = count_vertex_helpfulness(G, vertex, adj_part, {}, partitions, sq)
         helpfulness_of_vertices.append({'v_num': vertex, 'helpfulness': vertex_helpfulness})
 
-    sort_vertices_helpfulness(helpfulness_of_vertices)
+    sort_vertices_helpfulness(G, helpfulness_of_vertices)
     return helpfulness_of_vertices
 
 

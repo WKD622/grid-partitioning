@@ -1,3 +1,4 @@
+import math
 import random
 
 from src.utils import print_infos
@@ -162,10 +163,10 @@ def can_be_matched(G, a, b, weights, T, t, number_of_partitions, grid_size):
     h_weight = weights['h_weight']
     s_weight = weights['s_weight']
     sum_weight_of_nodes = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
-    # discount = (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions)))
-    # if discount > 1:
-    #     discount = 1
-    return sum_weight_of_nodes <= h_weight + s_weight
+    discount = (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions)))
+    if discount > 1:
+        discount = 1
+    return sum_weight_of_nodes <= discount * (h_weight + s_weight)
 
 
 def update_highest_weight(G, a, b, weights):

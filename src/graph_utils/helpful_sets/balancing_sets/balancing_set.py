@@ -37,7 +37,7 @@ def phase_1(G, vertices_helpfulness, S_size, S_helpfulness, partitions):
             set_helpfulness += vertex_helpfulness
             helpful_set.add(vertex_num)
             update_helpfulness_of_neighbours(G, vertex_num, vertices_helpfulness, partitions)
-            sort_vertices_helpfulness(vertices_helpfulness)
+            sort_vertices_helpfulness(G, vertices_helpfulness)
 
     return helpful_set, set_helpfulness
 
@@ -130,5 +130,5 @@ def add_vertex_and_update_sets(G, v_num, v_helpfulness, helpful_set, set_helpful
     helpful_set.append({'v_num': v_num, 'helpfulness': v_helpfulness})
     set_helpfulness += v_helpfulness
     update_helpfulness_of_neighbours(G, v_num, big_set, partitions)
-    sort_vertices_helpfulness(big_set)
+    sort_vertices_helpfulness(G, big_set)
     return set_helpfulness
