@@ -1,7 +1,7 @@
 import copy
 from math import ceil, log
 
-from src.graph_utils.helpful_sets.balancing_sets.balance_sets_greedily import balance_greedily
+from src.graph_utils.helpful_sets.balancing_sets.balance_sets_greedily import balance_greedily_weighted
 from src.graph_utils.helpful_sets.balancing_sets.balancing_set import search_for_balancing_set
 from src.graph_utils.helpful_sets.balancing_sets.balancing_set_improved import search_for_balancing_set_improved
 from src.graph_utils.helpful_sets.balancing_sets.helpers import determine_max_and_min_weight_for_balancing_set
@@ -71,7 +71,7 @@ def compute_areas_size(G, partitions, partition_a, partition_b):
 
 
 def improve_bisection_improved(G, partitions, all_vertices, partition_a, partition_b, partitions_vertices,
-                               partitions_stats, bigger_dim, draw):
+                               partitions_stats, bigger_dim, draw, p=0.3):
     partitions_vertices_c = copy.deepcopy(partitions_vertices)
     partitions_vertices_c[partition_a] = partitions_vertices_c[partition_a].intersection(all_vertices)
     partitions_vertices_c[partition_b] = partitions_vertices_c[partition_b].intersection(all_vertices)
@@ -179,15 +179,11 @@ def improve_bisection_improved(G, partitions, all_vertices, partition_a, partiti
                                                               partitions)
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_b], partition_a,
                                                               partitions)
-
-    balance_greedily(G=G, p=0.1,
-                     partition_a=partition_a,
-                     partition_b=partition_b,
-                     partitions_vertices=partitions_vertices,
-                     partitions_vertices_c=partitions_vertices_c,
-                     partitions_stats=partitions_stats,
-                     partitions=partitions)
-    # if cut_size > 0.1 * bigger_dim:
-    #     # draw(1, 50, 'before move')
-    #
-    #     # draw(1, 50, 'after move')
+    if cut_size > 0.1 * bigger_dim:
+        balance_greedily_weighted(G=G, p=p,
+                                  partition_a=partition_a,
+                                  partition_b=partition_b,
+                                  partitions_vertices=partitions_vertices,
+                                  partitions_vertices_c=partitions_vertices_c,
+                                  partitions_stats=partitions_stats,
+                                  partitions=partitions)

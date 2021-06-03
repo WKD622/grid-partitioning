@@ -7,14 +7,16 @@ from src.definitions import NORMAL_AREA, INDIVISIBLE_AREA, OFF_AREA, colors_for_
 from src.grid_to_image.helpers import get_color
 
 
-def plot(X, y, colors, s, G, name, save=False, title=''):
-    figure(figsize=(3, 3))
+def plot(X, y, colors, s, G, name, fig_size, save=False, title=''):
+    figure(figsize=fig_size)
     for i in range(len(X)):
         plt.scatter(X[i], y[i], color=colors[i], marker="s", s=s)
     plt.gca().invert_yaxis()
     plt.axis('off')
-    plt.title(title)
-    plt.tight_layout()
+    if title:
+        plt.title(title)
+    else:
+        plt.tight_layout()
     plt.xlim(0, G.graph['shape'][1] - 1)
     plt.ylim(G.graph['shape'][0] - 1, 0)
     if save:
@@ -40,7 +42,7 @@ def convert_graph_to_image(G, p, s, name):
     plot(X, y, colors, s, G, name)
 
 
-def optimized_convert_graph_to_image_2(G, areas, p, s, name):
+def optimized_convert_graph_to_image_2(G, areas, p, s, vertical_size, horizontal_size, name):
     X = []
     y = []
     colors = []
@@ -59,7 +61,8 @@ def optimized_convert_graph_to_image_2(G, areas, p, s, name):
                 y.append(G.nodes[node]['data']['y'])
                 colors.append(get_color(G.nodes[node]['data']['type']))
 
-    plot(X, y, colors, s, G, name)
+    fig_size = compute_fig_size(horizontal_size, vertical_size)
+    plot(X=X, y=y, colors=colors, s=s, G=G, name=name, fig_size=fig_size)
 
 
 def draw_a_color():
@@ -70,7 +73,18 @@ def draw_partitions_colors(number_of_colors):
     return [draw_a_color() for i in range(number_of_colors)]
 
 
-def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, partitions, name, save=False, title=''):
+def compute_fig_size(horizontal_size, vertical_size):
+    if horizontal_size > vertical_size:
+        size_y = 3
+        size_x = horizontal_size * 3 / vertical_size
+    else:
+        size_y = vertical_size * 3 / horizontal_size
+        size_x = 3
+    return size_x, size_y
+
+
+def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, partitions, name, vertical_size, horizontal_size,
+                                       save=False, title=''):
     X = []
     y = []
     colors = []
@@ -84,5 +98,5 @@ def convert_partitioned_graph_to_image(G, p, s, number_of_partitions, partitions
             X.append(G.nodes[node]['data']['x'])
             y.append(G.nodes[node]['data']['y'])
             colors.append(partitions_colors[partitions[node]])
-
-    plot(X, y, colors, s, G, name, save, title)
+    fig_size = compute_fig_size(horizontal_size, vertical_size)
+    plot(X, y, colors, s, G, name, fig_size, save, title)

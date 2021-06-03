@@ -1,10 +1,12 @@
 import math
 
+from src.graph_utils.helpful_sets.helpers import update_partitions_stats
 
-def remove_noises(G, horizontal_size, partitions, partitions_vertices, number_of_partitions):
+
+def remove_noises(G, horizontal_size, partitions, partitions_vertices, number_of_partitions, partitions_stats):
     areas = find_areas(G, horizontal_size, partitions, number_of_partitions)
     biggest_size_indexes = find_biggest_partitions_areas(areas, number_of_partitions)
-    remove_small_partitions(areas, biggest_size_indexes, partitions, partitions_vertices)
+    remove_small_partitions(G, areas, biggest_size_indexes, partitions, partitions_vertices, partitions_stats)
 
 
 def find_areas(G, horizontal_size, partitions, number_of_partitions):
@@ -56,22 +58,30 @@ def find_biggest_partitions_areas(areas, number_of_partitions):
     return biggest_size_indexes
 
 
-def remove_small_partitions(areas, biggest_size_indexes, partitions, partitions_vertices):
+def remove_small_partitions(G, areas, biggest_size_indexes, partitions, partitions_vertices, partitions_stats):
     for partition_number, partition_areas in areas.items():
         if len(partition_areas) > 1:
             for index, partition_area in enumerate(partition_areas):
-                if index != biggest_size_indexes[partition_area]:
-                    merge_partition_area(partition_area, partitions, partitions_vertices)
+                if index != biggest_size_indexes[partition_number]:
+                    merge_partition_area(G, partition_number, partition_area, partitions, partitions_vertices,
+                                         partitions_stats)
 
 
-def merge_partition_area(partition_area, partitions, partitions_vertices):
-    partition_to_merge_with = get_partition_number_to_merge_with(partition_area)
+def merge_partition_area(G, current_partition, partition_area, partitions, partitions_vertices, partitions_stats):
+    dest_partition = get_partition_number_to_merge_with(G, partition_area, current_partition, partitions)
     for vertex in partition_area:
-        pass
+        partitions_vertices[current_partition].remove(vertex)
+        partitions_vertices[dest_partition].add(vertex)
+        partitions[vertex] = dest_partition
+
+    update_partitions_stats(current_partition, dest_partition, len(partition_area), partitions_stats)
 
 
-def get_partition_number_to_merge_with(partition_area):
-    return 1
+def get_partition_number_to_merge_with(G, partition_area, current_partition, partitions):
+    for vertex in partition_area:
+        for adj_v in G.adj[vertex]:
+            if partitions[adj_v] != current_partition:
+                return partitions[adj_v]
 
 
 def get_merged_areas(number_of_partitions, areas):

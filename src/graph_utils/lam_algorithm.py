@@ -266,5 +266,5 @@ def lam_algorithm(G, number_of_partitions, T, t, grid_size, show_progress):
 
 def greedy_matching(grid):
     while grid.G.number_of_nodes() > 50000:
-        a, b, w = grid.get_edge_with_highest_weight()
-        grid.reduce([a, b])
+        a, b, w = grid._get_edge_with_highest_weight()
+        grid._reduce([a, b])
