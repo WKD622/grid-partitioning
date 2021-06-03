@@ -54,12 +54,12 @@ def balance_greedily_normal(G, p, partition_a, partition_b, partitions_vertices,
         cur_partition = partition_a
         dest_partition = partition_b
         vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_a], partition_b,
-                                                            partitions, sq=False)
+                                                            partitions, sq=True)
     else:
         cur_partition = partition_b
         dest_partition = partition_a
         vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices[partition_b], partition_a,
-                                                            partitions, sq=False)
+                                                            partitions, sq=True)
 
     vertices, set_size = find_vertices_to_balance_normal(G,
                                                          vertices_helpfulness=vertices_helpfulness,
@@ -67,6 +67,7 @@ def balance_greedily_normal(G, p, partition_a, partition_b, partitions_vertices,
                                                          partitions=partitions,
                                                          adj_partition=dest_partition,
                                                          cur_partition=cur_partition)
+
     move_set_normal(partitions=partitions,
                     current_partition=cur_partition,
                     dest_partition=dest_partition,

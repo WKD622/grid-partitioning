@@ -1,5 +1,5 @@
 def restore_area(G, vertex):
-    if G.nodes[vertex]['data']['replaces']:
+    if 'replaces' in G.nodes[vertex]['data']:
         replaces = G.nodes[vertex]['data']['replaces']
         G.remove_node(vertex)
         for vertex, data in replaces.items():

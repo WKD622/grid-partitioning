@@ -1,4 +1,5 @@
 from src.grid import Grid
+from src.nodes_partitioner import NodesPartitioner
 
 
 class Partitioner:
@@ -6,25 +7,26 @@ class Partitioner:
     def __init__(self, grid_name):
         self.grid_name = grid_name
 
-    def partition_for_computations(self, number_of_cores, number_of_nodes, p, s):
-        grid = Grid(show_progress=False)
-        grid.load_image(self.grid_name)
-        grid.reduce_areas()
-        grid.reduce_by_lam(number_of_cores * number_of_nodes, draw_steps=False)
-        grid.create_partitions()
-        grid.fully_restore_with_partitions_improvement()
-        grid.remove_noises()
-        grid.draw_partitioned_grid(p, s, title='all partitions')
-        compact_G = grid.get_compact_graph()
-        print(compact_G)
-        # grid.reduce_by_lam(number_of_nodes)
-        # grid.create_partitions()
-        # print(grid.partitions_vertices)
-        # grid.draw_partitioned_grid(p, s, title='partitions for nodes')
-        # grid.equalize_areas()
-        # grid.fully_restore()
+    def partition_for_computations(self, number_of_cores, number_of_nodes, p, s, show_progress=False):
+        grid1 = Grid(show_progress=show_progress)
+        grid1.load_image(self.grid_name)
+        grid1.reduce_areas()
+        grid1.reduce_by_lam(number_of_cores * number_of_nodes)
+        grid1.create_partitions()
+        grid1.fully_restore_with_partitions_improvement(0.1)
+        grid1.remove_noises()
+        grid1.draw_partitioned_grid(p, s)
+        compact_G = grid1.create_compact_graph()
 
-        # grid.print_areas_stats()
+        nodes_partitioner = NodesPartitioner(show_progress=show_progress)
+        nodes_partitioner.load_partitioned_graph_object(compact_G=compact_G,
+                                                        number_of_partitions=number_of_nodes * number_of_cores)
+        partitions = nodes_partitioner.get_equal_partitioning_by_lam(number_of_nodes)
+
+        grid1.load_new_partitions(partitions)
+        grid1.fully_restore()
+        grid1.draw_partitioned_grid(p, s)
+        # grid1.print_areas_stats()
 
     def normal_partitioning(self, number_of_partitions, show_progress=False):
         grid = Grid(show_progress=show_progress)

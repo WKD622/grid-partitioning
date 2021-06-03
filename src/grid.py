@@ -1,3 +1,4 @@
+import copy
 import time
 from math import floor
 
@@ -6,9 +7,8 @@ import networkx as nx
 
 from src.definitions import NORMAL_AREA
 from src.graph_utils.helpful_sets.algorithm import improve_bisection, improve_bisection_improved
-from src.graph_utils.helpful_sets.balancing_sets.balance_sets_greedily import balance_greedily_normal
 from src.graph_utils.helpful_sets.helpers import (get_partitions_vertices, get_adjacent_partitions,
-                                                  create_adjacent_partitions_without_repeats)
+                                                  create_adjacent_partitions_without_repeats, get_offspring_vertices)
 from src.graph_utils.lam_algorithm import greedy_matching as greedy_matching_helper, lam_algorithm
 from src.graph_utils.noises_removal import remove_noises
 from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduce_vertices as reduce_vertices_helper
@@ -61,11 +61,8 @@ class Grid:
             self.bigger_dim = dim_1 if dim_1 > dim_2 else dim_2
             self.smaller_dim = dim_1 if dim_1 < dim_2 else dim_2
 
-    def load_graph(self, G):
-        self.G = G
-
     @print_infos
-    def load_ready_partitioning(self, partitioning_name):
+    def load_partitioned_graph_image(self, partitioning_name):
         G, grid_size, partitions_vertices = parse_partitioning(
             str(get_project_root()) + '/partitionings/' + partitioning_name)
         self.G = G
@@ -96,7 +93,7 @@ class Grid:
         T = self._calculate_maximal_number_of_episodes(number_of_partitions)
         while self.G.number_of_nodes() > number_of_partitions:
             start = time.time()
-            matches = lam_algorithm(self.G, number_of_partitions, T, i, self.grid_size, self.show_progress)
+            matches = lam_algorithm(self.G, number_of_partitions, T, i, self.show_progress)
             matches = remove_unnecessary_matches(self.last_number_of_partitions, number_of_partitions)
             for match in matches:
                 self._reduce(match)
@@ -142,7 +139,7 @@ class Grid:
         self.full_restoration_time = time.time() - start
 
     @print_infos
-    def fully_restore_with_partitions_improvement(self):
+    def fully_restore_with_partitions_improvement(self, p):
         """
         Restores graph completely with improvements.
         """
@@ -154,9 +151,8 @@ class Grid:
             number_of_reductions_done += 1
             if (number_of_reductions_done / init_red_length > 0.90
                     and floor(len(self.reductions) % (init_red_length * 0.03)) == 0):
-                pass
-                self._improve_partitioning_improved()
-        self._improve_partitioning_improved()
+                self._improve_partitioning_improved(p)
+        self._improve_partitioning_improved(p)
         while len(self.areas_reductions) > 0:
             self._restore_areas_one_step()
         self.full_restoration_time = time.time() - start
@@ -172,7 +168,7 @@ class Grid:
                                   self.partitions_stats)
 
     @print_infos
-    def _improve_partitioning_improved(self):
+    def _improve_partitioning_improved(self, p):
         """
         Improves partitioning. Multilevel algorithm for weighted graphs.
         """
@@ -187,23 +183,8 @@ class Grid:
                                            partition_b=partition,
                                            partitions_vertices=self.partitions_vertices,
                                            partitions_stats=self.partitions_stats,
+                                           p=p,
                                            draw=self._draw_one_step_of_restoration)
-
-    @print_infos
-    def balance_areas(self):
-        """
-        Balances areas without cut-size improvements.
-        """
-        adjacent_partitions = create_adjacent_partitions_without_repeats(self.adjacent_partitions)
-        for partition, neighbours in adjacent_partitions.items():
-            for vertex in neighbours:
-                balance_greedily_normal(G=self.G,
-                                        p=0.5,
-                                        partition_a=partition,
-                                        partition_b=vertex,
-                                        partitions_vertices=self.partitions_vertices,
-                                        partitions_stats=self.partitions_stats,
-                                        partitions=self.partitions)
 
     @print_infos
     def remove_noises(self):
@@ -245,13 +226,48 @@ class Grid:
         self.drawing_partitioned_grid_time = time.time() - start
 
     @print_infos
-    def get_compact_graph(self):
-        compact_G = self.G.copy()
-        print(compact_G)
-        print(self.G)
+    def create_compact_graph(self):
+        def create_partitions_for_compacted_graph(compact_G, old_partitions):
+            current_vertices = set(compact_G.nodes)
+            new_partitions = {}
+            new_partitions_vertices = {}
+            for vertex in current_vertices:
+                new_partitions[vertex] = old_partitions[vertex]
+                new_partitions_vertices[old_partitions[vertex]] = {vertex}
+            return new_partitions, new_partitions_vertices
+
+        def clean_data_fields(compact_G):
+            for node_num in compact_G.nodes:
+                compact_G.nodes[node_num]['data']['weight'] = 1
+                compact_G.nodes[node_num]['data']['num'] = node_num
+                compact_G.nodes[node_num]['data']['lvl'] = 0
+                del compact_G.nodes[node_num]['data']['replaces']
+
         for partition_number, vertices in self.partitions_vertices.items():
-            reduce_vertices_helper(compact_G, vertices, NORMAL_AREA)
-        return compact_G
+            self._reduce(vertices)
+        c_G = copy.deepcopy(self.G)
+        clean_data_fields(c_G)
+
+        c_partitions, c_partitions_vertices = create_partitions_for_compacted_graph(c_G, self.partitions)
+
+        return {
+            'c_G': c_G,
+            'partitions': c_partitions,
+            'partitions_vertices': c_partitions_vertices,
+            'reductions': self.reductions,
+            'horizontal_size': self.horizontal_size,
+            'vertical_size': self.vertical_size,
+        }
+
+    def load_new_partitions(self, partitions):
+        for vertex, partition in partitions.items():
+            new_partition = partition
+            old_partition = self.partitions[vertex]
+            offspring = get_offspring_vertices(self.G, vertex)
+            for v in offspring:
+                self.partitions_vertices[old_partition].remove(v)
+                self.partitions_vertices[new_partition].add(v)
+                self.partitions[v] = new_partition
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')
@@ -302,6 +318,7 @@ class Grid:
 
     def _restore_one_step(self):
         if len(self.reductions) > 0:
+
             self._restore_area(self.reductions.pop())
         else:
             print("No areas to restore")
