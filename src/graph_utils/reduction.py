@@ -67,7 +67,6 @@ def reduce_vertices(G, vertices_to_reduce, new_node_type):
 
 def reduce_areas(G, areas):
     history = []
-    for area_type in areas:
-        for vertices in areas[area_type].values():
-            history.append(reduce_vertices(G, set(vertices), area_type))
+    for area_number in areas:
+        history.append(reduce_vertices(G, areas[area_number], area_number))
     return history

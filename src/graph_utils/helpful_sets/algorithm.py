@@ -71,24 +71,23 @@ def compute_areas_size(G, partitions, partition_a, partition_b):
 
 
 def improve_bisection_improved(G, partitions, all_vertices, partition_a, partition_b, partitions_vertices,
-                               partitions_stats, bigger_dim, draw, p=0.3):
+                               partitions_stats, bigger_dim, draw, draw_, p=0.5):
     partitions_vertices_c = copy.deepcopy(partitions_vertices)
     partitions_vertices_c[partition_a] = partitions_vertices_c[partition_a].intersection(all_vertices)
     partitions_vertices_c[partition_b] = partitions_vertices_c[partition_b].intersection(all_vertices)
+
+    cut_size = count_cut_size(G, partitions, partitions_vertices_c, partition_a, partition_b)
+    limit_a = cut_size / 2
+    limit_b = cut_size / 2
+    S_max = ((len(partitions_vertices_c[partition_a]) + len(partitions_vertices_c[partition_b])) / 2) * 0.1
+
+    if cut_size <= 0:
+        return
 
     a_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_a], partition_b,
                                                           partitions)
     b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_b], partition_a,
                                                           partitions)
-
-    cut_size = count_cut_size(G, partitions, partitions_vertices_c, partition_a, partition_b)
-    limit_a = cut_size / 2
-    limit_b = cut_size / 2
-    S_max = ((len(partitions_vertices_c[partition_a]) + len(partitions_vertices_c[partition_b])) / 2) * 0.25
-
-    if cut_size <= 0:
-        return
-
     while limit_a + limit_b > 1:
 
         if limit_a == 0 or (2 * limit_a) < limit_b:
@@ -100,6 +99,7 @@ def improve_bisection_improved(G, partitions, all_vertices, partition_a, partiti
                                                                            vertices_helpfulness=a_vertices_helpfulness,
                                                                            limit=limit_a,
                                                                            s_max=S_max,
+                                                                           draw_=draw_,
                                                                            partitions=partitions,
                                                                            adj_partition=partition_b,
                                                                            cur_partition=partition_a)
@@ -112,6 +112,7 @@ def improve_bisection_improved(G, partitions, all_vertices, partition_a, partiti
                                                                                    vertices_helpfulness=b_vertices_helpfulness,
                                                                                    limit=limit_b,
                                                                                    s_max=S_max,
+                                                                                   draw_=draw_,
                                                                                    partitions=partitions,
                                                                                    adj_partition=partition_a,
                                                                                    cur_partition=partition_b)
@@ -141,6 +142,7 @@ def improve_bisection_improved(G, partitions, all_vertices, partition_a, partiti
 
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_b], partition_a,
                                                               partitions)
+
         min_, max_ = determine_max_and_min_weight_for_balancing_set(G, S_a_weight, partitions_vertices_c[partition_b])
         S_b, S_b_helpfulness, S_b_weight, success = search_for_balancing_set_improved(G=G,
                                                                                       vertices_helpfulness=b_vertices_helpfulness,
@@ -179,11 +181,11 @@ def improve_bisection_improved(G, partitions, all_vertices, partition_a, partiti
                                                               partitions)
         b_vertices_helpfulness = set_helpfulness_for_vertices(G, partitions_vertices_c[partition_b], partition_a,
                                                               partitions)
-    if cut_size > 0.1 * bigger_dim:
-        balance_greedily_weighted(G=G, p=p,
-                                  partition_a=partition_a,
-                                  partition_b=partition_b,
-                                  partitions_vertices=partitions_vertices,
-                                  partitions_vertices_c=partitions_vertices_c,
-                                  partitions_stats=partitions_stats,
-                                  partitions=partitions)
+    # if cut_size > 0.1 * bigger_dim:
+    balance_greedily_weighted(G=G, p=p,
+                              partition_a=partition_a,
+                              partition_b=partition_b,
+                              partitions_vertices=partitions_vertices,
+                              partitions_vertices_c=partitions_vertices_c,
+                              partitions_stats=partitions_stats,
+                              partitions=partitions)

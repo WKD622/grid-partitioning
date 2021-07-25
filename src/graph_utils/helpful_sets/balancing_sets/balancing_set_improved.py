@@ -14,6 +14,8 @@ from src.grid_to_image.draw import plot
 
 def search_for_balancing_set_improved(G, vertices_helpfulness, S_helpfulness, min_, max_, adj_partition, cur_partition,
                                       partitions):
+    # print('SEARCH FOR BALANCING SET STARTED')
+    # print('S_helpfulness: ', S_helpfulness, 'min:', min_, 'max:', max_)
     vertices_helpfulness_to_consider, adj_set = find_vertices_adj_to_another_partition(G,
                                                                                        partitions,
                                                                                        vertices_helpfulness,
@@ -29,17 +31,22 @@ def search_for_balancing_set_improved(G, vertices_helpfulness, S_helpfulness, mi
                                                                  max_=max_,
                                                                  partitions=partitions,
                                                                  cur_partition=cur_partition)
+    # print('len before phase 2:', len(S_dash))
 
-    # S_dash, S_dash_helpfulness, S_dash_weight = phase_2_improved(G=G,
-    #                                                              S_dash=S_dash,
-    #                                                              S_dash_helpfulness=S_dash_helpfulness,
-    #                                                              S_dash_weight=S_dash_weight,
-    #                                                              big_set=vertices_helpfulness,
-    #                                                              S_helpfulness=S_helpfulness,
-    #                                                              max_=max_,
-    #                                                              adjacent_partition=adj_partition,
-    #                                                              partitions=partitions)
+    # draw_S_dash(G, S_dash, 5)
+    S_dash, S_dash_helpfulness, S_dash_weight = phase_2_improved(G=G,
+                                                                 S_dash=S_dash,
+                                                                 S_dash_helpfulness=S_dash_helpfulness,
+                                                                 S_dash_weight=S_dash_weight,
+                                                                 big_set=vertices_helpfulness,
+                                                                 S_helpfulness=S_helpfulness,
+                                                                 max_=max_,
+                                                                 adjacent_partition=adj_partition,
+                                                                 partitions=partitions)
 
+    # print('len after phase 2:', len(S_dash))
+    # print('balanncing set weight:', S_dash_weight)
+    # draw_S_dash(G, S_dash, 4)
     if S_dash_helpfulness <= S_helpfulness - 1 and min_ <= S_dash_weight <= max_:
         success = True
     return S_dash, S_dash_helpfulness, S_dash_weight, success
@@ -291,4 +298,4 @@ def draw_S_dash(G, S_dash, color):
         y.append(G.nodes[vertex]['data']['y'])
         colors.append(colors_for_partitions[color])
 
-    plot(X, y, colors, 20, G, 'name')
+    plot(X, y, colors, 3, G, 'name', title='balancing_set')

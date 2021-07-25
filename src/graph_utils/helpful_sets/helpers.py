@@ -139,9 +139,9 @@ def update_helpfulness_of_neighbours_improved(G, v_num, vertices_helpfulness, ve
     for node_num in G.adj[v_num]:
         if partitions[node_num] == partition:
             adjacent_vertices.add(node_num)
-    for vertex in vertices_helpfulness:
-        if vertex['v_num'] in adjacent_vertices:
-            vertex['helpfulness'] += 2
+    # for vertex in vertices_helpfulness:
+    #     if vertex['v_num'] in adjacent_vertices:
+    #         vertex['helpfulness'] += 2
     for vertex in vertices_helpfulness_to_consider:
         if vertex['v_num'] in adjacent_vertices:
             vertex['helpfulness'] += 2

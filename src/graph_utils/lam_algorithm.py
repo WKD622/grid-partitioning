@@ -156,13 +156,15 @@ def finish(M, G, number_of_partitions):
     return (G.number_of_nodes() - len(M) / 2) == number_of_partitions
 
 
-def can_be_matched(G, a, b, weights, T, t, number_of_partitions):
+def can_be_matched(G, a, b, weights, T, t, number_of_partitions, discount_active):
     """
     Here the condition is checked whether vertex 'a' can be matched with vertex 'b' based on their weights.
     """
     h_weight = weights['h_weight']
     s_weight = weights['s_weight']
     sum_weight_of_nodes = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
+    if not discount_active:
+        return sum_weight_of_nodes <= h_weight + s_weight
     discount = (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions)))
     if discount > 1:
         discount = 1
@@ -178,7 +180,7 @@ def update_highest_weight(G, a, b, weights):
         weights['h_weight'] = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
 
 
-def try_match(G, a, b, U, M, weights, T, t, number_of_partitions):
+def try_match(G, a, b, U, M, weights, T, t, number_of_partitions, discount=True):
     """
     The most important, recursive part of the algorithm. Difference between my algorithm and the one from the paper is
     that I don't have R set (set of edges that have to be removed after matching). This set is useless for me in
@@ -196,15 +198,15 @@ def try_match(G, a, b, U, M, weights, T, t, number_of_partitions):
             c = get_adj_unchecked_vertex(G, U, a)
             move_edge(U, C_a, a, c)
             if get_edge_weight(G, a, c) > get_edge_weight(G, a, b):
-                try_match(G, a, c, U, M, weights, T, t, number_of_partitions)
+                try_match(G, a, c, U, M, weights, T, t, number_of_partitions, discount)
 
         if is_free(M, b) and there_are_unchecked_edges(G, U, b):
             d = get_adj_unchecked_vertex(G, U, b)
             move_edge(U, C_b, b, d)
             if get_edge_weight(G, b, d) > get_edge_weight(G, a, b):
-                try_match(G, b, d, U, M, weights, T, t, number_of_partitions)
+                try_match(G, b, d, U, M, weights, T, t, number_of_partitions, discount)
 
-    if is_free(M, a) and is_free(M, b) and can_be_matched(G, a, b, weights, T, t, number_of_partitions):
+    if is_free(M, a) and is_free(M, b) and can_be_matched(G, a, b, weights, T, t, number_of_partitions, discount):
         match(M, a, b)
         update_highest_weight(G, a, b, weights)
     elif is_matched(M, a) and is_free(M, b):
@@ -214,7 +216,7 @@ def try_match(G, a, b, U, M, weights, T, t, number_of_partitions):
 
 
 @print_infos
-def lam_algorithm(G, number_of_partitions, T, t, show_progress):
+def lam_algorithm(G, number_of_partitions, T, t, show_progress, discount=True):
     """
     Vertices in graph are represented by numbers.
 
@@ -257,7 +259,7 @@ def lam_algorithm(G, number_of_partitions, T, t, show_progress):
     while len(U) != 0:
         print_progress(U, G, show_progress)
         a, b = draw_an_edge(U)
-        try_match(G, a, b, U, M, weights, T, t, number_of_partitions)
+        try_match(G, a, b, U, M, weights, T, t, number_of_partitions, discount)
         if finish(M, G, number_of_partitions):
             break
 
