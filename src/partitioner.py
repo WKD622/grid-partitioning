@@ -57,13 +57,12 @@ class Partitioner:
         for i in range(number_of_iterations):
             print('ITERATION', i + 1)
             grid = Grid(show_progress=False)
-            grid.load_image(self.grid_name)
+            grid.load_image(self.grid_name, remove_off=True)
             grid.reduce_areas()
             grid.reduce_by_lam(number_of_partitions, draw_steps=False)
             grid.create_partitions()
             grid.fully_restore_with_partitions_improvement(p=0.3)
             grid.remove_noises()
-
             cut_size = grid._get_cut_size()
             if cut_size < smallest_cut_size:
                 print('CUT_SIZE:', cut_size)

@@ -15,7 +15,7 @@ from src.graph_utils.reduction import reduce_areas as reduce_areas_helper, reduc
 from src.graph_utils.restoration import restore_area as restore_area_helper
 from src.grid_to_image.draw import convert_partitioned_graph_to_image, \
     optimized_convert_graph_to_image_2, convert_graph_to_image
-from src.image_to_graph.conversion import convert_image_to_graph
+from src.image_to_graph.conversion import convert_image_to_graph_off_weighted_0, convert_image_to_graph_off_removed
 from src.parse_partitioning.parse_partitioning import parse_partitioning
 from src.utils import get_project_root, print_infos
 
@@ -47,10 +47,14 @@ class Grid:
         self.smaller_dim = None
 
     @print_infos
-    def load_image(self, grid_name):
+    def load_image(self, grid_name, remove_off=False):
         if grid_name:
             start = time.time()
-            G, indivisible_areas, off_areas, grid_size, dim_1, dim_2 = convert_image_to_graph(
+            if remove_off:
+                converting_function = convert_image_to_graph_off_removed
+            else:
+                converting_function = convert_image_to_graph_off_weighted_0
+            G, indivisible_areas, off_areas, grid_size, dim_1, dim_2 = converting_function(
                 str(get_project_root()) + '/grids/' + grid_name, self.show_progress)
             self.conversion_time = time.time() - start
             self.grid_size = grid_size
@@ -138,6 +142,8 @@ class Grid:
         start = time.time()
         while len(self.reductions) > 0:
             self._restore_one_step()
+        while len(self.areas_reductions) > 0:
+            self._restore_areas_one_step()
         self.full_restoration_time = time.time() - start
 
     @print_infos
@@ -454,6 +460,7 @@ class Grid:
     def get_highest_and_smallest_partition(self):
         min_ = float("inf")
         max_ = -float("inf")
+        print(self.partitions_stats)
         for partition_number, area_size in self.partitions_stats.items():
             if area_size > max_:
                 max_ = area_size

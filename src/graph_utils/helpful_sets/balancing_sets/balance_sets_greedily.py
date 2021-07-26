@@ -84,7 +84,6 @@ def find_vertices_to_balance_weighted(G, weight_to_balance, vertices_helpfulness
                                                                                        vertices_helpfulness,
                                                                                        adj_partition,
                                                                                        cur_partition)
-    sort_vertices_helpfulness(G, vertices_helpfulness_to_consider)
 
     vertices_to_balance = set()
 

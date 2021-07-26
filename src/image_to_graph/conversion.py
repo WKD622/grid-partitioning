@@ -127,7 +127,7 @@ def count_node_number(x, y, image):
     return y * image.shape[1] + x
 
 
-def convert_image_to_graph(path, show_progress):
+def convert_image_to_graph_off_weighted_0(path, show_progress):
     image = cv2.imread(path)
     image_shape = (image.shape[0], image.shape[1])
     number_of_vertices = image.shape[0] * image.shape[1]
@@ -160,6 +160,37 @@ def convert_image_to_graph(path, show_progress):
                 off_area_number = handle_off_area(x, y, image, off_areas_sets,
                                                   off_areas_pixels, node_num,
                                                   off_area_number)
+
+    if show_progress:
+        print("conversion finished: 100%")
+    return G, indivisible_areas_sets, off_areas_sets, image.shape[0] * image.shape[1], image.shape[0], image.shape[1],
+
+
+def convert_image_to_graph_off_removed(path, show_progress):
+    image = cv2.imread(path)
+    image_shape = (image.shape[0], image.shape[1])
+    number_of_vertices = image.shape[0] * image.shape[1]
+    indivisible_area_number = 0
+    indivisible_areas_pixels = {}
+    indivisible_areas_sets = {}
+    off_areas_sets = {}
+    G = nx.Graph(shape=image_shape)
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            node_num = count_node_number(x, y, image)
+            print_progress(node_num, number_of_vertices, show_progress)
+            pixel_type = get_pixel_type(image[y][x])
+            if pixel_type != OFF_AREA:
+                G.add_node(node_num,
+                           data={'type': pixel_type, 'x': x, 'y': y, 'num': node_num, 'lvl': 0, 'weight': 1})
+                if x > 0 and get_pixel_type(image[y][x - 1]) != OFF_AREA:
+                    G.add_edge(y * image.shape[1] + x - 1, node_num, w=1)
+                if y > 0 and get_pixel_type(image[y - 1][x]) != OFF_AREA:
+                    G.add_edge((y - 1) * image.shape[1] + x, node_num, w=1)
+                if pixel_type == INDIVISIBLE_AREA:
+                    indivisible_area_number = handle_indivisible_area(x, y, image, indivisible_areas_sets,
+                                                                      indivisible_areas_pixels, node_num,
+                                                                      indivisible_area_number)
 
     if show_progress:
         print("conversion finished: 100%")

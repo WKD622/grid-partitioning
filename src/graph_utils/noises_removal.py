@@ -12,16 +12,15 @@ def remove_noises(G, horizontal_size, partitions, partitions_vertices, number_of
 def find_areas(G, horizontal_size, partitions, number_of_partitions):
     areas = init_areas(number_of_partitions)
     for node_num in sorted(G.nodes):
-
         node_partition = partitions[node_num]
         added = False
-        if upper_node_exists(node_num, horizontal_size):
+        if upper_node_exists(node_num, horizontal_size, G.nodes):
             upper_node_partition = get_upper_node_partition(node_num, horizontal_size, partitions)
             if upper_node_partition == node_partition:
                 added = True
                 append_to_area(upper_node_number(node_num, horizontal_size), node_num, upper_node_partition, areas)
 
-        if left_node_exists(node_num, horizontal_size):
+        if left_node_exists(node_num, horizontal_size, G.nodes):
             left_node_partition = get_left_node_partition(node_num, partitions)
             if left_node_partition == node_partition:
                 parent_number = left_node_number(node_num)
@@ -118,12 +117,12 @@ def update_area(parent, another_partition_area, partition, areas):
     get_area(parent, partition_areas).update(another_partition_area)
 
 
-def upper_node_exists(node_num, horizontal_size):
-    return node_num - horizontal_size >= 0
+def upper_node_exists(node_num, horizontal_size, nodes):
+    return node_num - horizontal_size in nodes
 
 
-def left_node_exists(node_num, horizontal_size):
-    return node_num - 1 >= 0 and node_num % horizontal_size != 0
+def left_node_exists(node_num, horizontal_size, nodes):
+    return node_num - 1 >= 0 and node_num % horizontal_size != 0 and node_num - 1 in nodes
 
 
 def get_upper_node_partition(node_num, horizontal_size, partitions):
