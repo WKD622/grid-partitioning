@@ -12,27 +12,28 @@ class Partitioner:
         self.grid_name = grid_name
 
     def partition_for_computations(self, number_of_cores, number_of_nodes, s, p=1, show_progress=False,
+                                   grid_base_size=5,
                                    remove_off=False):
         grid1 = Grid(show_progress=show_progress)
         grid1.load_image(self.grid_name, remove_off=remove_off)
-        grid1.draw_initial_grid(p, s)
+        # grid1.draw_initial_grid(p, s)
         grid1.reduce_areas()
         grid1.reduce_by_lam(number_of_cores * number_of_nodes)
         grid1.create_partitions()
         grid1.fully_restore_with_partitions_improvement(0.5)
         grid1.remove_noises()
-        grid1.draw_partitioned_grid(p, s)
+        # grid1.draw_partitioned_grid(p, s,  base_size=grid_base_size)
         compact_G = grid1.create_compact_graph()
 
         nodes_partitioner = NodesPartitioner(show_progress=show_progress)
         nodes_partitioner.load_partitioned_graph_object(compact_G=compact_G,
                                                         number_of_partitions=number_of_nodes * number_of_cores)
         partitions = nodes_partitioner.get_equal_partitioning_by_lam(number_of_nodes)
-
+        print(partitions)
         grid1.load_new_partitions(partitions)
         grid1.fully_restore()
-        grid1.print_areas_stats()
-        grid1.draw_partitioned_grid(p, s)
+        # grid1.print_areas_stats()
+        grid1.draw_partitioned_grid(p, s, base_size=grid_base_size)
         grid1.print_areas_stats()
 
     def normal_partitioning(self, number_of_partitions, s, p=1, grid_base_size=5, show_progress=False,
