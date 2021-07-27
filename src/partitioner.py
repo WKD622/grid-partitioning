@@ -11,9 +11,10 @@ class Partitioner:
     def __init__(self, grid_name):
         self.grid_name = grid_name
 
-    def partition_for_computations(self, number_of_cores, number_of_nodes, s, p=1, show_progress=False):
+    def partition_for_computations(self, number_of_cores, number_of_nodes, s, p=1, show_progress=False,
+                                   remove_off=False):
         grid1 = Grid(show_progress=show_progress)
-        grid1.load_image(self.grid_name)
+        grid1.load_image(self.grid_name, remove_off=remove_off)
         grid1.draw_initial_grid(p, s)
         grid1.reduce_areas()
         grid1.reduce_by_lam(number_of_cores * number_of_nodes)
@@ -34,10 +35,11 @@ class Partitioner:
         grid1.draw_partitioned_grid(p, s)
         grid1.print_areas_stats()
 
-    def normal_partitioning(self, number_of_partitions, s, p=1, grid_base_size=5, show_progress=False):
+    def normal_partitioning(self, number_of_partitions, s, p=1, grid_base_size=5, show_progress=False,
+                            remove_off=False):
         grid = Grid(show_progress=show_progress)
-        grid.load_image(self.grid_name)
-        grid.draw_initial_grid(p, s)
+        grid.load_image(self.grid_name, remove_off=remove_off)
+        grid.draw_initial_grid(p, s, optimized=False)
         start = time.time()
         grid.reduce_areas()
         grid.reduce_by_lam(number_of_partitions, draw_steps=False)
@@ -51,13 +53,14 @@ class Partitioner:
         grid.print_areas_stats()
         grid.draw_partitioned_grid(p, s, base_size=grid_base_size)
 
-    def run_experiment_cut_size(self, number_of_iterations, number_of_partitions, s, grid_base_size=5):
+    def run_experiment_cut_size(self, number_of_iterations, number_of_partitions, s, grid_base_size=5,
+                                remove_off=False):
         smallest_cut_size = float("inf")
         grid_to_draw = None
         for i in range(number_of_iterations):
             print('ITERATION', i + 1)
             grid = Grid(show_progress=False)
-            grid.load_image(self.grid_name, remove_off=True)
+            grid.load_image(self.grid_name, remove_off=remove_off)
             grid.reduce_areas()
             grid.reduce_by_lam(number_of_partitions, draw_steps=False)
             grid.create_partitions()
@@ -72,13 +75,14 @@ class Partitioner:
         grid_to_draw.draw_partitioned_grid(p=1, s=s, base_size=grid_base_size)
         grid_to_draw.print_areas_stats()
 
-    def run_experiment_areas_size_diff(self, number_of_iterations, number_of_partitions, s, grid_base_size=5):
+    def run_experiment_areas_size_diff(self, number_of_iterations, number_of_partitions, s, grid_base_size=5,
+                                       remove_off=False):
         smallest_areas_diff = float("inf")
         grid_to_draw = None
         for i in range(number_of_iterations):
             print('ITERATION', i + 1)
             grid = Grid(show_progress=False)
-            grid.load_image(self.grid_name)
+            grid.load_image(self.grid_name, remove_off=remove_off)
             grid.reduce_areas()
             grid.reduce_by_lam(number_of_partitions, draw_steps=False)
             grid.create_partitions()
@@ -97,13 +101,14 @@ class Partitioner:
         grid_to_draw.draw_partitioned_grid(p=1, s=s, base_size=grid_base_size)
         grid_to_draw.print_areas_stats()
 
-    def run_experiment_areas_size_std(self, number_of_iterations, number_of_partitions, s, grid_base_size=5):
+    def run_experiment_areas_size_std(self, number_of_iterations, number_of_partitions, s, grid_base_size=5,
+                                      remove_off=False):
         min_std = float("inf")
         grid_to_draw = None
         for i in range(number_of_iterations):
             print('ITERATION', i + 1)
             grid = Grid(show_progress=False)
-            grid.load_image(self.grid_name)
+            grid.load_image(self.grid_name, remove_off=remove_off)
             grid.reduce_areas()
             grid.reduce_by_lam(number_of_partitions, draw_steps=False)
             grid.create_partitions()
