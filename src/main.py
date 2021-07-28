@@ -1,8 +1,8 @@
 from src.partitioner import Partitioner
 
-partitioner = Partitioner('empty_6.png')
-partitioner.partition_for_computations(number_of_cores=4,
-                                       number_of_nodes=4,
-                                       s=4,
-                                       grid_base_size=2,
-                                       remove_off=True)
+partitioner = Partitioner('strange22.png')
+partitioner.run_experiment_areas_size_std(number_of_iterations=10,
+                                          number_of_partitions=16,
+                                          s=1,
+                                          grid_base_size=7,
+                                          remove_off=False)

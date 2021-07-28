@@ -10,7 +10,10 @@ from src.grid_to_image.helpers import get_color
 
 def plot_legend(plt, partitions_colors, partitions_stats, grid_size):
     legend_elements = []
+    print(partitions_stats)
+    print(partitions_colors)
     for partition_number, partition_color in partitions_colors.items():
+        print(partition_number)
         legend_elements.append(Line2D([0], [0], marker='s', color='w',
                                       label='Partition {}, w={}, %a={:.2f}%'.format(partition_number,
                                                                                      partitions_stats[partition_number],

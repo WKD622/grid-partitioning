@@ -49,8 +49,10 @@ class NodesPartitioner:
         self.reduce_by_lam(number_of_nodes)
         self.create_partitions()
         if not self.are_partitions_equal():
+            print('here3')
             self.balance_areas()
         if not self.are_partitions_equal():
+            print('here4')
             self.additional_balancing()
 
         return self.partitions
@@ -128,7 +130,8 @@ class NodesPartitioner:
 
     @print_infos
     def additional_balancing(self):
-        while not self.are_partitions_equal():
+        i = 0
+        while not self.are_partitions_equal() and i < 100:
             biggest_partition_number, smallest_partition_number = self.find_biggest_and_smallest_partition()
             vertex_to_move = self.chose_vertex(biggest_partition_number)
             move_set_normal(partitions=self.partitions,
@@ -138,6 +141,7 @@ class NodesPartitioner:
                             to_be_moved={vertex_to_move},
                             weight=1,
                             partitions_stats=self.partitions_stats)
+            i += 1
 
     @print_infos
     def balance_areas(self):

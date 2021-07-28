@@ -12,29 +12,38 @@ class Partitioner:
         self.grid_name = grid_name
 
     def partition_for_computations(self, number_of_cores, number_of_nodes, s, p=1, show_progress=False,
-                                   grid_base_size=5,
+                                   grid_base_size=5, number_of_iterations=100,
                                    remove_off=False):
-        grid1 = Grid(show_progress=show_progress)
-        grid1.load_image(self.grid_name, remove_off=remove_off)
-        # grid1.draw_initial_grid(p, s)
-        grid1.reduce_areas()
-        grid1.reduce_by_lam(number_of_cores * number_of_nodes)
-        grid1.create_partitions()
-        grid1.fully_restore_with_partitions_improvement(0.5)
-        grid1.remove_noises()
-        # grid1.draw_partitioned_grid(p, s,  base_size=grid_base_size)
-        compact_G = grid1.create_compact_graph()
+        smallest_cut_size = float("inf")
+        grid_to_draw = None
+        for i in range(number_of_iterations):
+            print('ITERATION', i + 1)
+            grid1 = Grid(show_progress=show_progress)
+            grid1.load_image(self.grid_name, remove_off=remove_off)
+            grid1.reduce_areas()
+            grid1.reduce_by_lam(number_of_cores * number_of_nodes)
+            grid1.create_partitions()
+            grid1.fully_restore_with_partitions_improvement(0.5)
+            grid1.remove_noises()
+            # grid1.draw_partitioned_grid(p, s,  base_size=grid_base_size)
+            compact_G = grid1.create_compact_graph()
+            print('here1')
 
-        nodes_partitioner = NodesPartitioner(show_progress=show_progress)
-        nodes_partitioner.load_partitioned_graph_object(compact_G=compact_G,
-                                                        number_of_partitions=number_of_nodes * number_of_cores)
-        partitions = nodes_partitioner.get_equal_partitioning_by_lam(number_of_nodes)
-        print(partitions)
-        grid1.load_new_partitions(partitions)
-        grid1.fully_restore()
-        # grid1.print_areas_stats()
-        grid1.draw_partitioned_grid(p, s, base_size=grid_base_size)
-        grid1.print_areas_stats()
+            nodes_partitioner = NodesPartitioner(show_progress=show_progress)
+            nodes_partitioner.load_partitioned_graph_object(compact_G=compact_G,
+                                                            number_of_partitions=number_of_nodes * number_of_cores)
+            print('here2')
+            partitions = nodes_partitioner.get_equal_partitioning_by_lam(number_of_nodes)
+            grid1.partitions_stats = {}
+            print('here5')
+            grid1.load_new_partitions(partitions)
+            grid1.fully_restore()
+            cut_size = grid1._get_cut_size()
+            if cut_size < smallest_cut_size:
+                smallest_cut_size = cut_size
+                grid_to_draw = grid1
+        grid_to_draw.draw_partitioned_grid(p, s, base_size=grid_base_size)
+        grid_to_draw.print_areas_stats()
 
     def normal_partitioning(self, number_of_partitions, s, p=1, grid_base_size=5, show_progress=False,
                             remove_off=False):
@@ -110,6 +119,7 @@ class Partitioner:
             print('ITERATION', i + 1)
             grid = Grid(show_progress=False)
             grid.load_image(self.grid_name, remove_off=remove_off)
+            grid.draw_initial_grid(p=1, s=s, base_size=grid_base_size)
             grid.reduce_areas()
             grid.reduce_by_lam(number_of_partitions, draw_steps=False)
             grid.create_partitions()

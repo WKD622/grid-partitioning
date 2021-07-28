@@ -280,6 +280,8 @@ class Grid:
         }
 
     def load_new_partitions(self, partitions):
+        old_number_of_partitions = self.last_number_of_partitions
+        self.last_number_of_partitions = len(set(partitions.values()))
         for vertex, partition in partitions.items():
             new_partition = partition
             old_partition = self.partitions[vertex]
@@ -288,6 +290,17 @@ class Grid:
                 self.partitions_vertices[old_partition].remove(v)
                 self.partitions_vertices[new_partition].add(v)
                 self.partitions[v] = new_partition
+            self.partitions_stats = {}
+            for node in self.G.nodes:
+                partition_number = partitions[node]
+                if partition_number in self.partitions_stats:
+                    self.partitions_stats[partition_number] += self.G.nodes[node]['data']['weight']
+                else:
+                    self.partitions_stats[partition_number] = self.G.nodes[node]['data']['weight']
+
+        for partition_number in range(old_number_of_partitions):
+            if partition_number > self.last_number_of_partitions - 1:
+                self.partitions_vertices.pop(partition_number)
 
     def print_execution_times(self):
         print('\n----------- EXECUTION TIMES -----------')

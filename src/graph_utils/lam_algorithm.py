@@ -165,7 +165,7 @@ def can_be_matched(G, a, b, weights, T, t, number_of_partitions, discount_active
     sum_weight_of_nodes = G.nodes[a]['data']['weight'] + G.nodes[b]['data']['weight']
     if not discount_active:
         return sum_weight_of_nodes <= h_weight + s_weight
-    discount = (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions)))
+    discount = (t / (T * (h_weight / (s_weight + 1)) * math.log(number_of_partitions) + 1))
     if discount > 1:
         discount = 1
     return sum_weight_of_nodes <= discount * (h_weight + s_weight)
