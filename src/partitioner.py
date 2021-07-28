@@ -1,3 +1,4 @@
+import copy
 import time
 
 import numpy
@@ -16,6 +17,7 @@ class Partitioner:
                                    remove_off=False):
         smallest_cut_size = float("inf")
         grid_to_draw = None
+        big_grid_to_draw = None
         for i in range(number_of_iterations):
             print('ITERATION', i + 1)
             grid1 = Grid(show_progress=show_progress)
@@ -25,23 +27,24 @@ class Partitioner:
             grid1.create_partitions()
             grid1.fully_restore_with_partitions_improvement(0.5)
             grid1.remove_noises()
-            # grid1.draw_partitioned_grid(p, s,  base_size=grid_base_size)
-            compact_G = grid1.create_compact_graph()
-            print('here1')
+            grid1_copy = copy.deepcopy(grid1)
+            compact_G = grid1_copy.create_compact_graph()
 
-            nodes_partitioner = NodesPartitioner(show_progress=show_progress)
-            nodes_partitioner.load_partitioned_graph_object(compact_G=compact_G,
-                                                            number_of_partitions=number_of_nodes * number_of_cores)
-            print('here2')
-            partitions = nodes_partitioner.get_equal_partitioning_by_lam(number_of_nodes)
-            grid1.partitions_stats = {}
-            print('here5')
-            grid1.load_new_partitions(partitions)
-            grid1.fully_restore()
-            cut_size = grid1._get_cut_size()
-            if cut_size < smallest_cut_size:
-                smallest_cut_size = cut_size
-                grid_to_draw = grid1
+            for i in range(300):
+                nodes_partitioner = NodesPartitioner(show_progress=show_progress)
+                nodes_partitioner.load_partitioned_graph_object(compact_G=compact_G,
+                                                                number_of_partitions=number_of_nodes * number_of_cores)
+                partitions = nodes_partitioner.get_equal_partitioning_by_lam(number_of_nodes)
+                grid1_copy_2 = copy.deepcopy(grid1_copy)
+                grid1_copy_2.partitions_stats = {}
+                grid1_copy_2.load_new_partitions(partitions)
+                grid1_copy_2.fully_restore()
+                cut_size = grid1_copy_2._get_cut_size()
+                if cut_size < smallest_cut_size:
+                    smallest_cut_size = cut_size
+                    big_grid_to_draw = copy.deepcopy(grid1)
+                    grid_to_draw = copy.deepcopy(grid1_copy_2)
+        big_grid_to_draw.draw_partitioned_grid(p, s, base_size=grid_base_size)
         grid_to_draw.draw_partitioned_grid(p, s, base_size=grid_base_size)
         grid_to_draw.print_areas_stats()
 

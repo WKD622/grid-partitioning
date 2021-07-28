@@ -1,4 +1,5 @@
 import math
+import operator
 import random
 import time
 
@@ -49,10 +50,8 @@ class NodesPartitioner:
         self.reduce_by_lam(number_of_nodes)
         self.create_partitions()
         if not self.are_partitions_equal():
-            print('here3')
             self.balance_areas()
         if not self.are_partitions_equal():
-            print('here4')
             self.additional_balancing()
 
         return self.partitions
@@ -112,26 +111,16 @@ class NodesPartitioner:
             return True
 
     def find_biggest_and_smallest_partition(self):
-        smallest_number = math.inf
-        smallest_size = math.inf
-        biggest_number = -math.inf
-        biggest_size = -math.inf
-        for partition_number, size in self.partitions_stats.items():
-            if size > biggest_size:
-                biggest_number = partition_number
-                biggest_size = size
-            elif size < smallest_size:
-                smallest_number = partition_number
-                smallest_size = size
-        return biggest_number, smallest_number
+        max_ = max(self.partitions_stats.items(), key=operator.itemgetter(1))[0]
+        min_ = min(self.partitions_stats.items(), key=operator.itemgetter(1))[0]
+        return max_, min_
 
     def chose_vertex(self, partition_number):
         return random.choice(tuple(self.partitions_vertices[partition_number]))
 
     @print_infos
     def additional_balancing(self):
-        i = 0
-        while not self.are_partitions_equal() and i < 100:
+        while not self.are_partitions_equal():
             biggest_partition_number, smallest_partition_number = self.find_biggest_and_smallest_partition()
             vertex_to_move = self.chose_vertex(biggest_partition_number)
             move_set_normal(partitions=self.partitions,
@@ -141,7 +130,6 @@ class NodesPartitioner:
                             to_be_moved={vertex_to_move},
                             weight=1,
                             partitions_stats=self.partitions_stats)
-            i += 1
 
     @print_infos
     def balance_areas(self):
